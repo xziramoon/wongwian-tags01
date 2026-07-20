@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง</title>
+<link
+  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@300;400;600;700&family=Mitr:wght@400;500;600&family=Prompt:wght@300;400;600;700&family=Sarabun:wght@300;400;600;700&display=swap"
+  rel="stylesheet"
+/>
+<script src="https://unpkg.com/mqtt@5.15.2/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.12.3/dist/JsBarcode.all.min.js"></script>
+<style>
+  /* ============ base vars (subset of wongwian-tags global.css :root) ============ */
+  :root {
+    --ac: #4b47e6;
+    --ac-d: #3a36c4;
+    --ac-soft: #ecebff;
+    --ac-tint: #f4f3ff;
+    --ink: #171725;
+    --txt: #171725;
+    --txt2: #767690;
+    --surface: #ffffff;
+    --surface2: #f6f6fb;
+    --canvas: #e8e9f1;
+    --ln: #ececf3;
+    --ln2: #dbdbe7;
+    --g: #12a150;
+    --g-soft: #e6f6ec;
+    --r: #e43c3c;
+    --r-soft: #fcebeb;
+    --o: #db8a0a;
+    --o-soft: #fdf3e1;
+    --f-ui: 'IBM Plex Sans Thai', sans-serif;
+
+    /* tag render vars — same defaults as wongwian-tags DEFAULT_CONFIG, overwritten live by applyCSSVars() */
+    --f-tag: 'Kanit', sans-serif;
+    --tag-w: 5.4cm;
+    --tag-h: 4cm;
+    --large-w: 11.4cm;
+    --large-h: 6cm;
+    --price-sz: 46px;
+    --dual-price-sz: 28px;
+    --meta-sz: 10px;
+    --ribbon-f-sz: 10px;
+    --ribbon-x: -32px;
+    --ribbon-y: 15px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: var(--f-ui); background: var(--canvas); color: var(--txt); -webkit-font-smoothing: antialiased; }
+
+  /* ============ toolbar (screen-only status/control bar) ============ */
+  .toolbar {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--surface); border-bottom: 1px solid var(--ln2);
+    padding: 12px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    box-shadow: 0 2px 12px rgba(23,23,37,.06);
+  }
+  .tb-title { font-weight: 700; font-size: 16px; color: var(--ink); white-space: nowrap; }
+  .tb-status { display: flex; align-items: center; gap: 9px; padding: 7px 12px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--ln2); }
+  .tb-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--o); flex-shrink: 0; box-shadow: 0 0 0 4px rgba(219,138,10,.16); animation: pulse 1.4s ease infinite; }
+  .tb-dot.connected { background: var(--g); box-shadow: 0 0 0 4px rgba(18,161,80,.16); animation: none; }
+  .tb-dot.offline { background: var(--r); box-shadow: 0 0 0 4px rgba(228,60,60,.16); }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.82)} }
+  .tb-status-text { font-size: 13.5px; font-weight: 600; color: var(--txt2); }
+  .tb-info { font-size: 12.5px; color: var(--txt2); line-height: 1.5; }
+  .tb-info b { color: var(--ink); }
+  .tb-spacer { flex: 1; }
+  .tb-btn {
+    font-family: var(--f-ui); font-size: 13.5px; font-weight: 600; border: 1.5px solid var(--ln2);
+    background: var(--surface); color: var(--ink); border-radius: 9px; padding: 8px 14px; cursor: pointer;
+  }
+  .tb-btn:hover { border-color: var(--ac); color: var(--ac-d); background: var(--ac-tint); }
+  .tb-btn.primary { background: var(--ac); border-color: var(--ac); color: #fff; }
+  .tb-btn.primary:hover { background: var(--ac-d); }
+
+  /* ============ screen preview canvas ============ */
+  .page-scroll { padding: 28px; display: flex; justify-content: center; }
+  #print-area {
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 8mm;
+    box-shadow: 0 1px 0 rgba(23,23,37,.04), 0 40px 80px rgba(23,23,37,.18);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5mm;
+    align-content: flex-start;
+    position: relative;
+    border-radius: 6px;
+  }
+  .empty-msg { width: 100%; text-align: center; color: #a6a6bc; margin-top: 120px; font-family: var(--f-ui); font-size: 15px; letter-spacing: .3px; }
+
+  @media print {
+    .toolbar { display: none !important; }
+    .page-scroll { padding: 0 !important; display: block !important; }
+    body { background: #fff !important; }
+  }
+
+  /* ============================================================
+   * ⚠️ ห้ามแก้ — คัดลอกมาจาก src/styles/tag.css ของ wongwian-tags ตรงตัว
+   * (.price-tag layout ทั้งชุด + @media print) เพื่อให้เครื่องพิมพ์ปลายทาง
+   * เรนเดอร์ป้ายราคาออกมาเหมือนต้นทาง 100% — ถ้าแก้ต้นทาง ต้องแก้ที่นี่ด้วย
+   * ============================================================ */
+  .price-tag { background:#fff; border:2px solid #000; display:flex; flex-direction:column; box-sizing:border-box; page-break-inside:avoid; font-family:var(--f-tag); position:relative; height: var(--tag-h); width: var(--tag-w); overflow:hidden; }
+  .tag-ribbon { position: absolute; top: var(--ribbon-y); right: var(--ribbon-x); background: #000; color: #fff; font-size: var(--ribbon-f-sz); font-weight: 800; padding: 3px 45px; transform: rotate(45deg); z-index: 10; text-align: center; }
+  .tag-header  { background:#000; color:#fff; text-align:center; font-size:10px; font-weight:800; padding:3px 0; letter-spacing:1px; flex: 0 0 18px; overflow: visible; line-height:1.3; }
+  .tag-name-area { flex: 0 0 36px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2px 4px; border-bottom:1px solid #000; overflow: hidden; }
+  .tag-name { font-weight:600; text-align:center; line-height:1.25; color:#000; width: 100%; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break: break-word; padding:1px 0; }
+  .tag-date-txt { font-size: 8px; font-weight: 600; color: #444; letter-spacing: 0.3px; line-height: 1.3; margin-top:1px;}
+  .tag-mid-std { flex: 1 1 auto; display:flex; justify-content:space-between; align-items:flex-end; padding:2px 5px; overflow: hidden; gap:4px; }
+  .tag-img-side { flex:0 0 auto; width:38%; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .tag-img-side img { max-width:100%; max-height:100%; object-fit:contain; }
+  .tag-info { display:flex; flex-direction:column; font-size:var(--meta-sz); color:#000; line-height:1.35; justify-content:flex-end; padding-bottom:1px;}
+  .badge { background:#000; color:#fff; font-size:calc(var(--meta-sz) - 1px); font-weight:800; padding:1px 4px; border-radius:2px; margin-right:2px; display:inline-block; line-height:1.35; }
+  .tag-price-wrap { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; min-width: 0; }
+  .tag-old { font-size:10px; color:#555; margin-bottom: -1px; text-decoration: line-through; line-height:1.3; }
+  .tag-price-container { display: flex; align-items: baseline; justify-content: flex-end; width: 100%; }
+  .tag-price-slide { transition: transform 0.2s; line-height: 0.95; }
+  .tag-price { font-size:var(--price-sz); font-weight:900; letter-spacing:-1px; color:#000; }
+  .tag-baht-anchor { margin-left: 2px; flex-shrink: 0; z-index: 2; }
+  .tag-baht-inv  { background:#000; color:#fff; font-size:10px; font-weight:800; padding:2px 4px; border-radius:2px; }
+  .tag-baht-norm { font-size:11px; font-weight:800; color:#000; }
+
+  .tag-mid-dual { flex: 1 1 auto; min-height:0; display: flex; justify-content: space-between; align-items: center; padding: 3px 3px; overflow: hidden; gap:3px; }
+  .dual-col { display: flex; flex-direction: column; align-items: center; justify-content:center; flex:1 1 0; min-width:0; max-width:50%; overflow:hidden; }
+  .dual-div { width: 1px; align-self:stretch; border-right: 1px dashed #000; margin:4px 0; }
+  .dual-badge { background: #000; color: #fff; font-size: calc(var(--meta-sz) - 1px); font-weight: 800; padding: 2px 6px; border-radius: 2px; margin-bottom: 3px; text-align: center; white-space: nowrap; line-height:1.35; max-width:100%; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
+  .dual-price-row { display: flex; align-items: baseline; justify-content:center; width:100%; min-width:0; overflow:hidden; }
+  .dual-price-val { font-size: var(--dual-price-sz); font-weight: 900; color: #000; letter-spacing: 0; line-height: 1.05; white-space:nowrap; min-width:0; }
+  .dual-baht { font-size: calc(var(--meta-sz) - 1px); font-weight: 800; color: #000; margin-left: 3px; flex-shrink:0; white-space:nowrap; }
+
+  .tag-mid-hero { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; padding:2px 6px 3px; overflow:hidden; }
+  .hero-top { flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:space-between; gap:5px; overflow:hidden; }
+  .hero-meta { display:flex; flex-direction:column; font-size:var(--meta-sz); color:#000; line-height:1.35; min-width:0; overflow:hidden; }
+  .hero-price-box { display:flex; align-items:baseline; flex-shrink:0; white-space:nowrap; }
+  .hero-price { font-size:var(--price-sz); font-weight:900; letter-spacing:-1px; color:#000; line-height:1; white-space:nowrap; }
+  .hero-baht { font-size:11px; font-weight:800; margin-left:2px; flex-shrink:0; }
+  .wholesale-strip { background:#000; color:#fff; display:flex; align-items:center; justify-content:center; gap:6px; padding:2px 6px; margin-top:2px; border-radius:2px; overflow:hidden; min-width:0; flex-shrink:0; }
+  .ws-label { font-size:calc(var(--meta-sz) - 1px); font-weight:700; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .ws-price { font-size:calc(var(--dual-price-sz) * 0.72); font-weight:900; line-height:1.1; white-space:nowrap; flex-shrink:0; }
+  .ws-baht { font-size:calc(var(--meta-sz) - 1px); font-weight:700; white-space:nowrap; flex-shrink:0; }
+
+  .tag-bc-area { flex: 0 0 42px; text-align:center; display:flex; justify-content:center; align-items:center; padding:2px 0; overflow: hidden; border-top: 1px dashed #000;}
+  .tag-bc-area svg { max-width:98%; max-height:100%; }
+
+  .price-tag-large { width: var(--large-w); height: var(--large-h); }
+  .tag-name-area-large { flex: 0 0 46px; display:flex; align-items:center; justify-content:center; padding: 4px 10px; border-bottom: 2px solid #000; text-align: center; overflow: hidden;}
+  .tag-name-large { font-weight:700; color:#000; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .tag-large-body { flex: 1 1 auto; display: flex; border-bottom: 1px dashed #000; overflow:hidden;}
+  .tag-large-left { width: 50%; padding: 5px 10px; display: flex; flex-direction: column; justify-content: center; font-size: calc(var(--meta-sz) + 2px); font-weight: 700; color: #000; line-height: 1.55; }
+  .tag-large-img { max-width:80%; max-height:52px; object-fit:contain; margin:2px auto; }
+  .tag-large-box { border: 2px solid #000; display: inline-flex; flex-direction: column; align-items: center; margin-top: 5px; border-radius: 4px; padding: 4px 10px; align-self: flex-start; }
+  .tag-large-box-title { font-size: 10px; font-weight: 800; text-transform: uppercase; line-height: 1.2; }
+  .tag-large-box-price { font-size: calc(var(--meta-sz) + 6px); font-weight: 900; line-height: 1.1; margin-top: 2px; }
+  .tag-large-divider { width: 1px; border-right: 1px dashed #000; }
+  .tag-large-right { width: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
+  .tag-price-large { font-size: calc(var(--price-sz) * 1.3); font-weight: 900; letter-spacing: -1px; line-height: 0.95; color: #000; }
+  .tag-baht-large { font-size: calc(var(--meta-sz) + 6px); font-weight: 800; color: #000; margin-left: 8px; }
+  .pack-icon { display:inline-block; font-size:calc(var(--meta-sz) + 2px); margin-right:3px; }
+
+  @media print {
+    @page { margin:0; size: auto; }
+    body { background:#fff !important; color:#000 !important; overflow:visible; }
+    #print-area { width:100%; box-shadow:none !important; padding:2mm; gap:2mm; border:none !important; background:#fff !important; margin:0; min-height:0; }
+    .empty-msg { display:none !important; }
+    .price-tag { border: 2px solid #000 !important; background:#fff !important; box-shadow:none !important; transform:none !important; }
+    .tag-header, .tag-ribbon, .badge, .tag-baht-inv, .dual-badge, .wholesale-strip { background:#000 !important; color:#fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .wholesale-strip * { color:#fff !important; }
+    .tag-name, .tag-price, .tag-info, .tag-baht-norm, .tag-old, .dual-price-val, .dual-baht, .tag-large-left, .tag-price-large, .tag-baht-large, .tag-date-txt, .hero-price, .hero-baht, .hero-meta { color:#000 !important; }
+    .tag-name-area, .tag-name-area-large, .tag-large-box { border-color: #000 !important; }
+    .tag-bc-area { border-top: 1px dashed #000 !important; }
+    .tag-large-body { border-bottom: 1px dashed #000 !important; }
+    .dual-div, .tag-large-divider { border-right: 1px dashed #000 !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <div class="tb-title">🖨 TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง</div>
+    <div class="tb-status">
+      <span class="tb-dot" id="tbDot"></span>
+      <span class="tb-status-text" id="tbStatusText">กำลังเชื่อมต่อ...</span>
+    </div>
+    <div class="tb-info">
+      หัวข้อ (topic): <b id="tbTopic">branch-nuea-print-tags</b><br />
+      งานพิมพ์ล่าสุด: <b id="tbLastPrint">ยังไม่มี</b>
+    </div>
+    <div class="tb-spacer"></div>
+    <button class="tb-btn" id="tbTestBtn">ทดสอบพิมพ์ตัวอย่าง</button>
+    <button class="tb-btn primary" id="tbReconnectBtn">เชื่อมต่อใหม่</button>
+  </div>
+
+  <div class="page-scroll">
+    <div id="print-area">
+      <div class="empty-msg">รอรับงานพิมพ์จากเครื่องหลัก...</div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+ * ตั้งค่า MQTT — ต้องตรงกับฝั่ง publish ใน wongwian-tags (src/lib/printBridge.ts)
+ * ============================================================ */
+var BROKER_URL = 'wss://broker.emqx.io:8084/mqtt';
+var TOPIC = 'branch-nuea-print-tags';
+
+/* ============================================================
+ * ⚠️ ห้ามแก้ตรรกะ — ยกมาจาก wongwian-tags/src/constants.ts (DEFAULT_CONFIG)
+ * และ src/store/queueStore.ts (normalize) ตรงตัว เพื่อให้ค่า default ตรงกับต้นทาง
+ * ============================================================ */
+var DEFAULT_CONFIG = {
+  header: 'ร้านวงเวียน',
+  font: "'Kanit',sans-serif",
+  labelSize: 'ขนาด',
+  labelUnit: 'บรรจุ',
+  labelRetail: 'ปลีก',
+  invertBaht: true,
+  w: 5.4, h: 4.0, bcHeight: 24,
+  globalNameSz: 0,
+  priceSz: 46, dualSz: 28, metaSz: 10,
+  ribbonSz: 10, ribbonX: -32, ribbonY: 15,
+  largeW: 11.4, largeH: 6.0, bcHeightLrg: 35,
+};
+var CONFIG_NUMERIC_KEYS = ['w','h','bcHeight','globalNameSz','priceSz','dualSz','metaSz','ribbonSz','ribbonX','ribbonY','largeW','largeH','bcHeightLrg'];
+
+function normalizeConfig(raw) {
+  var merged = Object.assign({}, DEFAULT_CONFIG, raw || {});
+  CONFIG_NUMERIC_KEYS.forEach(function (k) {
+    var n = Number(merged[k]);
+    merged[k] = Number.isFinite(n) ? n : DEFAULT_CONFIG[k];
+  });
+  merged.invertBaht = merged.invertBaht !== false;
+  merged.header = String(merged.header != null ? merged.header : DEFAULT_CONFIG.header);
+  merged.font = String(merged.font != null ? merged.font : DEFAULT_CONFIG.font);
+  merged.labelSize = String(merged.labelSize != null ? merged.labelSize : DEFAULT_CONFIG.labelSize);
+  merged.labelUnit = String(merged.labelUnit != null ? merged.labelUnit : DEFAULT_CONFIG.labelUnit);
+  merged.labelRetail = String(merged.labelRetail != null ? merged.labelRetail : DEFAULT_CONFIG.labelRetail);
+  return merged;
+}
+
+/* normalizeItem() — เผื่อ field เก่า/ใหม่/ตัวพิมพ์ต่างกัน ไม่ให้พังถ้า payload ไม่ตรงเป๊ะ */
+function pick(obj, keys, fallback) {
+  for (var i = 0; i < keys.length; i++) {
+    var v = obj[keys[i]];
+    if (v !== undefined && v !== null && v !== '') return v;
+  }
+  return fallback;
+}
+function normalizeItem(raw) {
+  var q = raw || {};
+  return {
+    Barcode: String(pick(q, ['Barcode', 'barcode'], '')),
+    ProductName: String(pick(q, ['ProductName', 'productName', 'name', 'Name'], '')),
+    NameFontSize: Number(pick(q, ['NameFontSize', 'nameFontSize'], 0)) || 0,
+    TagMode: String(pick(q, ['TagMode', 'tagMode'], 'standard')),
+    DualStyle: String(pick(q, ['DualStyle', 'dualStyle'], 'A')),
+    OldPrice: String(pick(q, ['OldPrice', 'oldPrice'], '')),
+    Price: String(pick(q, ['Price', 'price'], '0.00')),
+    Price2: String(pick(q, ['Price2', 'price2', 'packPrice'], '')),
+    PriceOffsetX: Number(pick(q, ['PriceOffsetX', 'priceOffsetX'], 0)) || 0,
+    Size: String(pick(q, ['Size', 'size'], '')),
+    Unit: String(pick(q, ['Unit', 'unit'], 'ชิ้น')),
+    Unit1: String(pick(q, ['Unit1', 'unit1'], '')),
+    Unit2: String(pick(q, ['Unit2', 'unit2'], '')),
+    PackType: String(pick(q, ['PackType', 'packType'], '')),
+    Ribbon: String(pick(q, ['Ribbon', 'ribbon'], '')),
+    Mfg: String(pick(q, ['Mfg', 'mfg'], '')),
+    Exp: String(pick(q, ['Exp', 'exp'], '')),
+    Image: String(pick(q, ['Image', 'image'], '')),
+    PrintQty: Number(pick(q, ['PrintQty', 'printQty', 'Qty', 'qty'], 1)) || 1,
+  };
+}
+
+/* fmtPrice / escapeHTML — ยกมาจาก src/lib/utils.ts ตรงตัว */
+function fmtPrice(v) {
+  var n = parseFloat(String(v)) || 0;
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>'"]/g, function (tag) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag];
+  });
+}
+
+/* dualScale / heroScale — ยกมาจาก src/components/PriceTag.tsx ตรงตัว */
+function dualScale(s) {
+  var len = String(s).length;
+  if (len <= 3) return 1;
+  if (len === 4) return 0.88;
+  if (len === 5) return 0.74;
+  if (len === 6) return 0.62;
+  return 0.52;
+}
+function heroScale(s) {
+  var len = String(s).length;
+  if (len <= 3) return 1;
+  if (len === 4) return 0.85;
+  if (len === 5) return 0.7;
+  if (len === 6) return 0.58;
+  return 0.48;
+}
+
+/* applyCSSVars — ยกมาจาก src/lib/cssVars.ts ตรงตัว */
+function applyCSSVars(config) {
+  var root = document.documentElement.style;
+  function set(prop, val, suffix) {
+    suffix = suffix || '';
+    if (val !== undefined && val !== '') root.setProperty(prop, val + suffix);
+  }
+  set('--tag-w', config.w, 'cm');
+  set('--tag-h', config.h, 'cm');
+  set('--large-w', config.largeW, 'cm');
+  set('--large-h', config.largeH, 'cm');
+  set('--price-sz', config.priceSz, 'px');
+  set('--dual-price-sz', config.dualSz, 'px');
+  set('--meta-sz', config.metaSz || 10, 'px');
+  set('--ribbon-f-sz', config.ribbonSz || 10, 'px');
+  set('--ribbon-x', config.ribbonX != null ? config.ribbonX : -32, 'px');
+  set('--ribbon-y', config.ribbonY != null ? config.ribbonY : 15, 'px');
+  set('--f-tag', config.font);
+}
+
+/* ============================================================
+ * render — พอร์ตมาจาก src/components/PriceTag.tsx ตรงตัว (JSX -> template string)
+ * ============================================================ */
+function buildTagHTML(item, config) {
+  var isLarge = item.TagMode === 'large';
+  var bcHeightStd = config.bcHeight || 24;
+  var bcHeightLrg = config.bcHeightLrg || 35;
+
+  var pDisp = fmtPrice(item.Price);
+  var p2Disp = fmtPrice(item.Price2);
+  var invBaht = config.invertBaht !== false;
+  var LBL_SIZE = config.labelSize || 'ขนาด';
+  var LBL_UNIT = config.labelUnit || 'บรรจุ';
+  var LBL_RETAIL = config.labelRetail || 'ปลีก';
+  var xOffset = item.PriceOffsetX || 0;
+
+  var safeSize = (item.Size || '').trim();
+  var safeUnit = item.Unit || 'ชิ้น';
+  var safeUnit1 = (item.Unit1 || '').trim();
+  var safeUnit2 = item.Unit2 || '';
+  var safeRibbon = (item.Ribbon || '').trim();
+  var safePack = (item.PackType || '').trim();
+  var imgURL = (item.Image || '').trim();
+  var nameFontSize = item.NameFontSize || 13;
+
+  var bahtHTML = invBaht
+    ? '<span class="tag-baht-inv">บาท</span>'
+    : '<span class="tag-baht-norm">บาท</span>';
+
+  var sizeHTML = safeSize
+    ? '<div><span class="badge">' + escapeHTML(LBL_SIZE) + '</span>' + escapeHTML(safeSize) + '</div>'
+    : '';
+  var unitHTML = '<div><span class="badge">' + escapeHTML(LBL_UNIT) + '</span>1 ' + escapeHTML(safeUnit) + '</div>';
+  var packHTML = safePack
+    ? '<div><span class="pack-icon">📦</span>' + escapeHTML(safePack) + '</div>'
+    : '';
+  var dateHTML = (item.Mfg || item.Exp)
+    ? '<div style="margin-top:2px">' +
+        (item.Mfg ? '<div class="tag-date-txt">MFG: ' + escapeHTML(item.Mfg) + '</div>' : '') +
+        (item.Exp ? '<div class="tag-date-txt">EXP: ' + escapeHTML(item.Exp) + '</div>' : '') +
+      '</div>'
+    : '';
+
+  var middle = '';
+  var tagClass = 'price-tag-normal';
+
+  if (item.TagMode === 'standard' || !item.TagMode) {
+    middle =
+      '<div class="tag-name-area"><div class="tag-name" style="font-size:' + nameFontSize + 'px">' + escapeHTML(item.ProductName) + '</div></div>' +
+      '<div class="tag-mid-std">' +
+        (imgURL ? '<div class="tag-img-side"><img src="' + escapeHTML(imgURL) + '" onerror="this.parentNode.style.display=\'none\'"></div>' : '') +
+        '<div class="tag-info">' + sizeHTML + unitHTML + packHTML + dateHTML + '</div>' +
+        '<div class="tag-price-wrap">' +
+          (item.OldPrice && parseFloat(item.OldPrice) > 0 ? '<div class="tag-old">ปกติ <del>' + fmtPrice(item.OldPrice) + '</del></div>' : '') +
+          '<div class="tag-price-container">' +
+            '<div class="tag-price-slide" style="transform:translateX(' + xOffset + 'px)"><div class="tag-price">' + pDisp + '</div></div>' +
+            '<div class="tag-baht-anchor">' + bahtHTML + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  } else if (item.TagMode === 'dual') {
+    if (item.DualStyle === 'B') {
+      var hs = heroScale(pDisp);
+      var wss = heroScale(p2Disp);
+      var hasWs = item.Price2 && String(item.Price2).trim() !== '';
+      middle =
+        '<div class="tag-name-area"><div class="tag-name" style="font-size:' + nameFontSize + 'px">' + escapeHTML(item.ProductName) + '</div></div>' +
+        '<div class="tag-mid-hero">' +
+          '<div class="hero-top">' +
+            '<div class="hero-meta">' + sizeHTML + unitHTML + packHTML + '</div>' +
+            '<div class="hero-price-box" style="transform:translateX(' + xOffset + 'px)">' +
+              '<span class="hero-price" style="font-size:calc(var(--price-sz) * ' + hs + ')">' + pDisp + '</span>' +
+              '<span class="hero-baht">บาท</span>' +
+            '</div>' +
+          '</div>' +
+          (hasWs
+            ? '<div class="wholesale-strip">' +
+                '<span class="ws-label">' + escapeHTML(safeUnit2 || 'ราคาส่ง') + '</span>' +
+                '<span class="ws-price" style="font-size:calc(var(--dual-price-sz) * 0.72 * ' + wss + ')">' + p2Disp + '</span>' +
+                '<span class="ws-baht">บาท</span>' +
+              '</div>'
+            : '') +
+        '</div>';
+    } else {
+      var p1Label = safeUnit1 || LBL_RETAIL;
+      var p2Label = safeUnit2 || 'ราคาส่ง';
+      var s1 = dualScale(pDisp);
+      var s2 = dualScale(p2Disp);
+      middle =
+        '<div class="tag-name-area">' +
+          '<div class="tag-name" style="font-size:' + nameFontSize + 'px">' + escapeHTML(item.ProductName) + '</div>' +
+          (safeSize ? '<div style="font-size:9px;font-weight:600;margin-top:2px;line-height:1.3">[ ' + escapeHTML(LBL_SIZE) + ' ' + escapeHTML(safeSize) + ' ]</div>' : '') +
+        '</div>' +
+        '<div class="tag-mid-dual">' +
+          '<div class="dual-col">' +
+            '<div class="dual-badge">' + escapeHTML(p1Label) + '</div>' +
+            '<div class="dual-price-row"><div class="dual-price-val" style="font-size:calc(var(--dual-price-sz) * ' + s1 + ')">' + pDisp + '</div><div class="dual-baht">บาท</div></div>' +
+          '</div>' +
+          '<div class="dual-div"></div>' +
+          '<div class="dual-col">' +
+            '<div class="dual-badge">' + escapeHTML(p2Label) + '</div>' +
+            '<div class="dual-price-row"><div class="dual-price-val" style="font-size:calc(var(--dual-price-sz) * ' + s2 + ')">' + p2Disp + '</div><div class="dual-baht">บาท</div></div>' +
+          '</div>' +
+        '</div>';
+    }
+  } else if (item.TagMode === 'large') {
+    tagClass = 'price-tag-large';
+    var hasWsLarge = item.Price2 && String(item.Price2).trim() !== '';
+    var nameLarge = item.NameFontSize || 14;
+    middle =
+      '<div class="tag-name-area-large"><div class="tag-name-large" style="font-size:calc(' + nameLarge + 'px + 6px)">' + escapeHTML(item.ProductName) + '</div></div>' +
+      '<div class="tag-large-body">' +
+        '<div class="tag-large-left">' +
+          (imgURL ? '<img class="tag-large-img" src="' + escapeHTML(imgURL) + '" onerror="this.style.display=\'none\'">' : '') +
+          (safeSize ? '<div>' + escapeHTML(LBL_SIZE) + ' ' + escapeHTML(safeSize) + '</div>' : '') +
+          '<div>' + escapeHTML(LBL_UNIT) + ' 1 ' + escapeHTML(safeUnit) + '</div>' +
+          (safePack ? '<div>📦 ' + escapeHTML(safePack) + '</div>' : '') +
+          ((item.Mfg || item.Exp)
+            ? '<div style="margin-top:6px">' +
+                (item.Mfg ? '<div class="tag-date-txt" style="font-size:11px">MFG: ' + escapeHTML(item.Mfg) + '</div>' : '') +
+                (item.Exp ? '<div class="tag-date-txt" style="font-size:11px">EXP: ' + escapeHTML(item.Exp) + '</div>' : '') +
+              '</div>'
+            : '') +
+          (hasWsLarge
+            ? '<div class="tag-large-box"><div class="tag-large-box-title">' + escapeHTML(safeUnit2 || 'ราคาส่ง') + '</div>' +
+                '<div class="tag-large-box-price">' + p2Disp + ' <span style="font-size:12px;font-weight:800">บาท</span></div></div>'
+            : '') +
+        '</div>' +
+        '<div class="tag-large-divider"></div>' +
+        '<div class="tag-large-right">' +
+          '<div class="tag-price-slide" style="transform:translateX(' + xOffset + 'px);display:flex;align-items:baseline">' +
+            '<div class="tag-price-large">' + pDisp + '</div><div class="tag-baht-large">บาท</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  return (
+    '<div class="price-tag ' + tagClass + '">' +
+      (safeRibbon ? '<div class="tag-ribbon">' + escapeHTML(safeRibbon) + '</div>' : '') +
+      '<div class="tag-header">' + escapeHTML(config.header || ' ') + '</div>' +
+      middle +
+      '<div class="tag-bc-area"><svg class="bc-svg" data-barcode="' + escapeHTML(item.Barcode) + '" data-large="' + isLarge + '" data-bch="' + (isLarge ? bcHeightLrg : bcHeightStd) + '"></svg></div>' +
+    '</div>'
+  );
+}
+
+function renderAll(items, config) {
+  applyCSSVars(config);
+  var area = document.getElementById('print-area');
+  var parts = [];
+  items.forEach(function (item) {
+    var qty = Math.max(1, parseInt(item.PrintQty, 10) || 1);
+    for (var k = 0; k < qty; k++) parts.push(buildTagHTML(item, config));
+  });
+  area.innerHTML = parts.length ? parts.join('') : '<div class="empty-msg">รอรับงานพิมพ์จากเครื่องหลัก...</div>';
+
+  area.querySelectorAll('.bc-svg').forEach(function (svg) {
+    var code = svg.getAttribute('data-barcode');
+    if (!code) return;
+    var isLarge = svg.getAttribute('data-large') === 'true';
+    var bch = parseFloat(svg.getAttribute('data-bch')) || (isLarge ? 35 : 24);
+    try {
+      JsBarcode(svg, code, {
+        format: 'CODE128',
+        width: isLarge ? 2.2 : 1.4,
+        height: bch,
+        displayValue: true,
+        fontSize: 11,
+        font: 'sans-serif',
+        fontOptions: 'bold',
+        textMargin: 1,
+        margin: 1,
+      });
+    } catch (e) {
+      /* invalid barcode value — leave svg empty */
+    }
+  });
+
+  return parts.length;
+}
+
+function waitForImagesReady() {
+  var imgs = Array.prototype.slice.call(document.querySelectorAll('#print-area img'));
+  if (!imgs.length) return Promise.resolve();
+  return Promise.race([
+    Promise.all(
+      imgs.map(function (img) {
+        if (img.complete) return Promise.resolve();
+        return new Promise(function (res) {
+          img.onload = img.onerror = res;
+        });
+      }),
+    ),
+    new Promise(function (res) {
+      setTimeout(res, 1500);
+    }),
+  ]);
+}
+
+/* small beep for feedback — same oscillator approach as src/lib/audio.ts */
+var audioCtx = null;
+function beep() {
+  try {
+    var Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!audioCtx) audioCtx = new Ctor();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+  } catch (e) {
+    /* audio not available — non-critical */
+  }
+}
+document.body.addEventListener('click', function () {
+  try {
+    var Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!audioCtx) audioCtx = new Ctor();
+  } catch (e) {}
+}, { once: true });
+
+/* ============================================================
+ * MQTT connect / subscribe / status UI / auto-reconnect
+ * ============================================================ */
+var client = null;
+var STATUS_TEXT = {
+  connecting: 'กำลังเชื่อมต่อ...',
+  connected: 'เชื่อมต่อพร้อมรับงานพิมพ์',
+  offline: 'หลุดการเชื่อมต่อ — กำลังต่อใหม่ให้...',
+};
+
+function setStatus(state) {
+  document.getElementById('tbDot').className = 'tb-dot ' + state;
+  document.getElementById('tbStatusText').textContent = STATUS_TEXT[state] || state;
+}
+
+function connectMQTT() {
+  if (client) {
+    try { client.end(true); } catch (e) {}
+    client = null;
+  }
+  setStatus('connecting');
+  client = mqtt.connect(BROKER_URL, { reconnectPeriod: 2000 });
+
+  client.on('connect', function () {
+    client.subscribe(TOPIC);
+    setStatus('connected');
+  });
+  client.on('reconnect', function () {
+    setStatus('connecting');
+  });
+  client.on('close', function () {
+    setStatus('offline');
+  });
+  client.on('offline', function () {
+    setStatus('offline');
+  });
+  client.on('error', function () {
+    setStatus('offline');
+  });
+  client.on('message', function (topic, msg) {
+    if (topic !== TOPIC) return;
+    handlePayload(msg.toString());
+  });
+}
+
+function fmtTime(d) {
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
+
+function handlePayload(raw) {
+  var data;
+  try {
+    data = JSON.parse(raw);
+  } catch (e) {
+    return;
+  }
+  var config = normalizeConfig(data.config);
+  var itemsRaw = Array.isArray(data.items) ? data.items : [];
+  var items = itemsRaw.map(normalizeItem);
+  var tagCount = renderAll(items, config);
+
+  document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ';
+  beep();
+
+  waitForImagesReady().then(function () {
+    window.print();
+  });
+}
+
+document.getElementById('tbTopic').textContent = TOPIC;
+document.getElementById('tbReconnectBtn').addEventListener('click', connectMQTT);
+document.getElementById('tbTestBtn').addEventListener('click', function () {
+  var demoItems = [
+    normalizeItem({ Barcode: '8850999123456', ProductName: 'ทดสอบพิมพ์ป้ายราคา (มาตรฐาน)', TagMode: 'standard', Price: '39.00', Size: '500 มล.', PrintQty: 1 }),
+    normalizeItem({ Barcode: '8850999654321', ProductName: 'ทดสอบพิมพ์ป้าย (ราคาคู่)', TagMode: 'dual', Price: '25.00', Price2: '220.00', Unit2: 'ยกลัง', PrintQty: 1 }),
+  ];
+  var tagCount = renderAll(demoItems, normalizeConfig({}));
+  document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ (ทดสอบ)';
+  waitForImagesReady().then(function () {
+    window.print();
+  });
+});
+
+connectMQTT();
+</script>
+
+<!--
+  หมายเหตุการติดตั้งจริง:
+  - เปิดไฟล์นี้ค้างไว้บนเครื่องที่ต่อกับเครื่องพิมพ์ป้ายราคา แล้วปล่อยให้รอรับงานพิมพ์
+  - ถ้าต้องการให้สั่งพิมพ์อัตโนมัติโดยไม่เด้ง dialog ยืนยันทุกครั้ง ให้เปิด Chrome ด้วย flag
+    --kiosk-printing (เช่น เพิ่มใน shortcut: chrome.exe --kiosk-printing "file:///path/to/TAG_PRINTER.html")
+    แล้วตั้งเครื่องพิมพ์เริ่มต้น (default printer) ของเครื่องเป็นเครื่องพิมพ์ป้ายราคาไว้ล่วงหน้า
+  - หากปิด/รีเฟรชหน้าแล้วเปิดใหม่ ระบบจะเชื่อมต่อ MQTT ใหม่อัตโนมัติและรอรับงานถัดไป
+-->
+</body>
+</html>
