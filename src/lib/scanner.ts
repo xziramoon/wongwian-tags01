@@ -1,7 +1,10 @@
 import mqtt, { type MqttClient } from 'mqtt';
 import { AUTO_SYNC_TOPIC } from '../constants';
 
-/* ⚠️ ห้ามแก้ตรรกะ — MQTT connect/subscribe/parse ยกมาจาก ScannerService เดิมตรงตัว */
+/* ⚠️ ห้ามแก้ตรรกะ — MQTT connect/subscribe/parse ยกมาจาก ScannerService เดิมตรงตัว
+ * คงไว้บน MQTT (broker.emqx.io) โดยตั้งใจ — ต่างจาก printBridge.ts/TAG_PRINTER.html
+ * เพราะปลายทางที่ publish เข้า topic นี้คือฮาร์ดแวร์สแกนบาร์โค้ด/เกตเวย์ภายนอกที่พูด MQTT
+ * อยู่แล้ว ไม่ได้อยู่ในโปรเจกต์นี้ ย้ายฝั่งเดียวจะทำให้สแกนเนอร์ใช้งานไม่ได้ */
 
 export type ScannerStatus = 'connecting' | 'connected' | 'offline';
 export type ScannerStatusListener = (status: ScannerStatus) => void;

@@ -1,6 +1,6 @@
-import mqtt, { type MqttClient } from 'mqtt';
+import * as Ably from 'ably';
 import type { Config, QueueItem } from '../types';
-import { PRINT_TAGS_TOPIC, PRINT_PAYLOAD_VERSION } from '../constants';
+import { ABLY_API_KEY, PRINT_TAGS_CHANNEL, PRINT_EVENT_NAME, PRINT_PAYLOAD_VERSION } from '../constants';
 
 export interface PrintPayload {
   v: number;
@@ -9,43 +9,38 @@ export interface PrintPayload {
   items: QueueItem[];
 }
 
-/* publishes the current queue+config to the remote TAG_PRINTER receiver over MQTT */
+/* publishes the current queue+config to the remote TAG_PRINTER receiver over Ably
+ * (wss on port 443 — unlike the old MQTT broker, this survives shop/office firewalls) */
 class PrintBridge {
-  private client: MqttClient | null = null;
-  private connecting: Promise<MqttClient> | null = null;
+  private client: Ably.Realtime | null = null;
 
-  private connect(): Promise<MqttClient> {
-    if (this.client?.connected) return Promise.resolve(this.client);
-    if (this.connecting) return this.connecting;
+  private getClient(): Ably.Realtime {
+    if (!this.client) this.client = new Ably.Realtime({ key: ABLY_API_KEY });
+    return this.client;
+  }
 
-    this.connecting = new Promise((resolve, reject) => {
-      const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-      const onConnect = () => {
-        client.off('error', onError);
-        this.client = client;
-        this.connecting = null;
-        resolve(client);
+  private waitConnected(client: Ably.Realtime): Promise<void> {
+    if (client.connection.state === 'connected') return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const onConnected = () => {
+        client.connection.off('failed', onFailed);
+        resolve();
       };
-      const onError = (err: Error) => {
-        client.off('connect', onConnect);
-        this.connecting = null;
-        reject(err);
+      const onFailed = (change: Ably.ConnectionStateChange) => {
+        client.connection.off('connected', onConnected);
+        reject(new Error(change.reason?.message || 'Ably connection failed'));
       };
-      client.once('connect', onConnect);
-      client.once('error', onError);
+      client.connection.once('connected', onConnected);
+      client.connection.once('failed', onFailed);
     });
-    return this.connecting;
   }
 
   async publish(config: Config, items: QueueItem[]): Promise<void> {
-    const client = await this.connect();
+    const client = this.getClient();
+    await this.waitConnected(client);
     const payload: PrintPayload = { v: PRINT_PAYLOAD_VERSION, ts: Date.now(), config, items };
-    return new Promise((resolve, reject) => {
-      client.publish(PRINT_TAGS_TOPIC, JSON.stringify(payload), { qos: 1 }, (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+    const channel = client.channels.get(PRINT_TAGS_CHANNEL);
+    await channel.publish(PRINT_EVENT_NAME, payload);
   }
 }
 

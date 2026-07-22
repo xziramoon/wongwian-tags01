@@ -8,7 +8,7 @@
   href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@300;400;600;700&family=Mitr:wght@400;500;600&family=Prompt:wght@300;400;600;700&family=Sarabun:wght@300;400;600;700&display=swap"
   rel="stylesheet"
 />
-<script src="https://unpkg.com/mqtt@5.15.2/dist/mqtt.min.js"></script>
+<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.12.3/dist/JsBarcode.all.min.js"></script>
 <style>
   /* ============ base vars (subset of wongwian-tags global.css :root) ============ */
@@ -201,10 +201,13 @@
 
 <script>
 /* ============================================================
- * ตั้งค่า MQTT — ต้องตรงกับฝั่ง publish ใน wongwian-tags (src/lib/printBridge.ts)
+ * ตั้งค่า Ably — ต้องตรงกับฝั่ง publish ใน wongwian-tags (src/lib/printBridge.ts
+ * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
+ * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var BROKER_URL = 'wss://broker.emqx.io:8084/mqtt';
-var TOPIC = 'branch-nuea-print-tags';
+var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
+var CHANNEL_NAME = 'branch-nuea-print-tags';
+var EVENT_NAME = 'print';
 
 /* ============================================================
  * ⚠️ ห้ามแก้ตรรกะ — ยกมาจาก wongwian-tags/src/constants.ts (DEFAULT_CONFIG)
@@ -553,7 +556,7 @@ document.body.addEventListener('click', function () {
 }, { once: true });
 
 /* ============================================================
- * MQTT connect / subscribe / status UI / auto-reconnect
+ * Ably connect / subscribe / status UI / auto-reconnect
  * ============================================================ */
 var client = null;
 var STATUS_TEXT = {
@@ -567,33 +570,23 @@ function setStatus(state) {
   document.getElementById('tbStatusText').textContent = STATUS_TEXT[state] || state;
 }
 
-function connectMQTT() {
+function connectAbly() {
   if (client) {
-    try { client.end(true); } catch (e) {}
+    try { client.close(); } catch (e) {}
     client = null;
   }
   setStatus('connecting');
-  client = mqtt.connect(BROKER_URL, { reconnectPeriod: 2000 });
+  client = new Ably.Realtime({ key: ABLY_API_KEY });
 
-  client.on('connect', function () {
-    client.subscribe(TOPIC);
-    setStatus('connected');
-  });
-  client.on('reconnect', function () {
-    setStatus('connecting');
-  });
-  client.on('close', function () {
-    setStatus('offline');
-  });
-  client.on('offline', function () {
-    setStatus('offline');
-  });
-  client.on('error', function () {
-    setStatus('offline');
-  });
-  client.on('message', function (topic, msg) {
-    if (topic !== TOPIC) return;
-    handlePayload(msg.toString());
+  client.connection.on('connecting', function () { setStatus('connecting'); });
+  client.connection.on('connected', function () { setStatus('connected'); });
+  client.connection.on('disconnected', function () { setStatus('offline'); });
+  client.connection.on('suspended', function () { setStatus('offline'); });
+  client.connection.on('failed', function () { setStatus('offline'); });
+
+  var channel = client.channels.get(CHANNEL_NAME);
+  channel.subscribe(EVENT_NAME, function (msg) {
+    handlePayload(typeof msg.data === 'string' ? msg.data : JSON.stringify(msg.data));
   });
 }
 
@@ -622,8 +615,8 @@ function handlePayload(raw) {
   });
 }
 
-document.getElementById('tbTopic').textContent = TOPIC;
-document.getElementById('tbReconnectBtn').addEventListener('click', connectMQTT);
+document.getElementById('tbTopic').textContent = CHANNEL_NAME;
+document.getElementById('tbReconnectBtn').addEventListener('click', connectAbly);
 document.getElementById('tbTestBtn').addEventListener('click', function () {
   var demoItems = [
     normalizeItem({ Barcode: '8850999123456', ProductName: 'ทดสอบพิมพ์ป้ายราคา (มาตรฐาน)', TagMode: 'standard', Price: '39.00', Size: '500 มล.', PrintQty: 1 }),
@@ -636,7 +629,7 @@ document.getElementById('tbTestBtn').addEventListener('click', function () {
   });
 });
 
-connectMQTT();
+connectAbly();
 </script>
 
 <!--
@@ -645,7 +638,7 @@ connectMQTT();
   - ถ้าต้องการให้สั่งพิมพ์อัตโนมัติโดยไม่เด้ง dialog ยืนยันทุกครั้ง ให้เปิด Chrome ด้วย flag
     --kiosk-printing (เช่น เพิ่มใน shortcut: chrome.exe --kiosk-printing "file:///path/to/TAG_PRINTER.html")
     แล้วตั้งเครื่องพิมพ์เริ่มต้น (default printer) ของเครื่องเป็นเครื่องพิมพ์ป้ายราคาไว้ล่วงหน้า
-  - หากปิด/รีเฟรชหน้าแล้วเปิดใหม่ ระบบจะเชื่อมต่อ MQTT ใหม่อัตโนมัติและรอรับงานถัดไป
+  - หากปิด/รีเฟรชหน้าแล้วเปิดใหม่ ระบบจะเชื่อมต่อ Ably ใหม่อัตโนมัติและรอรับงานถัดไป
 -->
 </body>
 </html>

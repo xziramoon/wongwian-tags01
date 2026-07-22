@@ -5,10 +5,20 @@ export const CLOUD_DB_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRUuWPCwpQbleOg8F8Kyt34obiUG15BuUuHJvRfo_I5GSqlCPp638EqDUgcqHG0igWkg9g6ko7h9hYS/pub?gid=2051624344&single=true&output=csv';
 export const SHEET_EDIT_URL =
   'https://docs.google.com/spreadsheets/d/1-s82oHNNDUjwPyrkgSWP-YO2EHgVKK52-HV_FMh_wul/edit?gid=857533628#gid=857533628';
+/* Ably realtime — used only for the print-tags bridge (src/lib/printBridge.ts +
+ * public/TAG_PRINTER.html). Replaces the old public MQTT broker (broker.emqx.io)
+ * so that link only ever needs outbound wss on port 443, which normal shop/office
+ * Wi-Fi never blocks. Key is scoped to publish+subscribe only. */
+export const ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
+export const PRINT_TAGS_CHANNEL = 'branch-nuea-print-tags';
+export const PRINT_EVENT_NAME = 'print';
+export const PRINT_PAYLOAD_VERSION = 1;
+
+/* MQTT (broker.emqx.io) — kept for the barcode-scanner feed (src/lib/scanner.ts).
+ * The external scanner hardware/gateway publishes over MQTT, so this side stays
+ * as-is; only the print-tags bridge above moved to Ably. */
 export const AUTO_SYNC_TOPIC = 'cyborg-tag-sys-wongwian-v8';
 export const AUTO_SYNC_INTERVAL = 5 * 60 * 1000; // 5 min background price check
-export const PRINT_TAGS_TOPIC = 'branch-nuea-print-tags';
-export const PRINT_PAYLOAD_VERSION = 1;
 
 export const QUEUE_STORAGE_KEY = 'wongwianQueue_v9';
 export const QUEUE_STORAGE_KEY_LEGACY = 'wongwianQueue';
