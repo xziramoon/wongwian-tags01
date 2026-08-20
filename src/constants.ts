@@ -12,7 +12,13 @@ export const SHEET_EDIT_URL =
 export const ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 export const PRINT_TAGS_CHANNEL = 'branch-nuea-print-tags';
 export const PRINT_EVENT_NAME = 'print';
-export const PRINT_PAYLOAD_VERSION = 1;
+/* v2 adds batchId/batchIndex/batchTotal so large queues can be split across several
+ * Ably messages — a single message is capped at 64KB and a big queue used to blow past
+ * that silently. TAG_PRINTER.html treats batchTotal<=1 (or missing) as a single-shot
+ * payload, so it stays compatible with anything still sending the old v1 shape. */
+export const PRINT_PAYLOAD_VERSION = 2;
+/* keep each published message safely under Ably's ~64KB cap */
+export const PRINT_BATCH_MAX_BYTES = 48 * 1024;
 
 /* MQTT (broker.emqx.io) — kept for the barcode-scanner feed (src/lib/scanner.ts).
  * The external scanner hardware/gateway publishes over MQTT, so this side stays

@@ -1263,6 +1263,78 @@ details.fold[open] .fold-arrow {
   color: var(--ink);
 }
 
+/* ============ PRINT HISTORY ============ */
+.history-entry {
+  border: 1px solid var(--ln2);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.history-entry > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  user-select: none;
+}
+.history-entry > summary::-webkit-details-marker {
+  display: none;
+}
+.history-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.history-badge-remote {
+  background: var(--ac-soft);
+  color: var(--ac-d);
+}
+.history-badge-local {
+  background: var(--surface2);
+  color: var(--txt2);
+  border: 1px solid var(--ln2);
+}
+.history-entry-time {
+  color: var(--txt2);
+  white-space: nowrap;
+}
+.history-entry-count {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.history-items {
+  padding: 4px 12px 10px;
+  border-top: 1px solid var(--ln);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.history-item-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--txt);
+  padding-top: 6px;
+}
+.history-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-item-qty {
+  flex-shrink: 0;
+  color: var(--txt2);
+}
+
 /* ============ SCROLL-TO-TOP FABS ============ */
 .fab-top {
   position: fixed;

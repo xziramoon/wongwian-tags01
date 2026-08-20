@@ -595,6 +595,41 @@ function fmtTime(d) {
   return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
 }
 
+/* ============================================================
+ * Batch accumulation — a large queue from wongwian-tags is split across several
+ * Ably messages (see src/lib/printBridge.ts). Messages sharing a batchId are buffered
+ * here until all of them arrive, then rendered/printed as a single job. batchTotal<=1
+ * (or missing, e.g. the "ทดสอบพิมพ์ตัวอย่าง" button) means a self-contained payload,
+ * handled immediately with no buffering.
+ * ============================================================ */
+var pendingBatch = null; // { batchId, batchTotal, config, chunks: QueueItem[][] }
+var pendingBatchTimer = null;
+var BATCH_TIMEOUT_MS = 20000;
+
+function clearPendingBatch() {
+  if (pendingBatchTimer) {
+    clearTimeout(pendingBatchTimer);
+    pendingBatchTimer = null;
+  }
+  pendingBatch = null;
+}
+
+function pendingBatchReceivedCount() {
+  if (!pendingBatch) return 0;
+  var n = 0;
+  for (var i = 0; i < pendingBatch.chunks.length; i++) if (pendingBatch.chunks[i] !== undefined) n++;
+  return n;
+}
+
+function finalizePrint(items, config) {
+  var tagCount = renderAll(items, config);
+  document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ';
+  beep();
+  waitForImagesReady().then(function () {
+    window.print();
+  });
+}
+
 function handlePayload(raw) {
   var data;
   try {
@@ -605,14 +640,37 @@ function handlePayload(raw) {
   var config = normalizeConfig(data.config);
   var itemsRaw = Array.isArray(data.items) ? data.items : [];
   var items = itemsRaw.map(normalizeItem);
-  var tagCount = renderAll(items, config);
+  var batchTotal = typeof data.batchTotal === 'number' && data.batchTotal > 0 ? data.batchTotal : 1;
 
-  document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ';
-  beep();
+  if (batchTotal <= 1) {
+    clearPendingBatch();
+    finalizePrint(items, config);
+    return;
+  }
 
-  waitForImagesReady().then(function () {
-    window.print();
-  });
+  var batchId = data.batchId;
+  var batchIndex = typeof data.batchIndex === 'number' ? data.batchIndex : 0;
+
+  if (!pendingBatch || pendingBatch.batchId !== batchId) {
+    clearPendingBatch();
+    pendingBatch = { batchId: batchId, batchTotal: batchTotal, config: config, chunks: new Array(batchTotal) };
+    pendingBatchTimer = setTimeout(function () {
+      document.getElementById('tbLastPrint').textContent =
+        'งานพิมพ์ไม่ครบ (' + pendingBatchReceivedCount() + '/' + batchTotal + ') — หมดเวลารอ';
+      pendingBatch = null;
+    }, BATCH_TIMEOUT_MS);
+  }
+
+  pendingBatch.chunks[batchIndex] = items;
+  var receivedCount = pendingBatchReceivedCount();
+  document.getElementById('tbLastPrint').textContent = 'กำลังรับงานพิมพ์... (' + receivedCount + '/' + batchTotal + ')';
+
+  if (receivedCount === batchTotal) {
+    var allItems = [].concat.apply([], pendingBatch.chunks);
+    var finalConfig = pendingBatch.config;
+    clearPendingBatch();
+    finalizePrint(allItems, finalConfig);
+  }
 }
 
 document.getElementById('tbTopic').textContent = CHANNEL_NAME;

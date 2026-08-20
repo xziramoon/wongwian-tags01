@@ -4,6 +4,7 @@ import SearchPanel from './SearchPanel';
 import QueuePanel from './QueuePanel';
 import SettingsFold from './SettingsFold';
 import BackupFold from './BackupFold';
+import HistoryFold from './HistoryFold';
 import PrintFooter from './PrintFooter';
 import ScrollTopFab from './ScrollTopFab';
 
@@ -19,6 +20,7 @@ export default function Sidebar() {
           <QueuePanel />
           <SettingsFold />
           <BackupFold />
+          <HistoryFold />
         </div>
         <PrintFooter />
       </aside>
