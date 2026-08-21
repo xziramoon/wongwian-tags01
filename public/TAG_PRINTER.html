@@ -526,6 +526,37 @@ function waitForImagesReady() {
   ]);
 }
 
+/* the Google Fonts <link> above uses display=swap, so tag text renders in a fallback
+ * font immediately and the real webfont (Kanit etc.) swaps in once its file finishes
+ * downloading — asynchronously, with no relation to renderAll() returning. Printing
+ * right after renderAll() (as before) could snapshot the page mid-swap, before the
+ * real font arrived, especially on the very first job after opening/refreshing this
+ * page. document.fonts.ready resolves once every font requested by the page's current
+ * content has finished loading, so waiting on it here holds the print until the real
+ * fonts are in — with a timeout fallback in case a font request stalls or 404s. */
+function waitForFontsReady() {
+  if (!(window.document && document.fonts && document.fonts.ready)) return Promise.resolve();
+  return Promise.race([
+    document.fonts.ready.catch(function () {}),
+    new Promise(function (res) {
+      setTimeout(res, 3000);
+    }),
+  ]);
+}
+
+/* kick the webfont downloads off as soon as the stylesheet is parsed, rather than
+ * waiting for the first print job to render text and trigger them — gives the very
+ * first job (right after a page load/refresh) the best chance the fonts are already
+ * cached by the time waitForFontsReady() checks */
+function warmUpFonts() {
+  if (!(window.document && document.fonts && document.fonts.load)) return;
+  ['IBM Plex Sans Thai', 'Kanit', 'Mitr', 'Prompt', 'Sarabun'].forEach(function (family) {
+    [400, 700].forEach(function (weight) {
+      document.fonts.load(weight + ' 16px "' + family + '"').catch(function () {});
+    });
+  });
+}
+
 /* small beep for feedback — same oscillator approach as src/lib/audio.ts */
 var audioCtx = null;
 function beep() {
@@ -625,7 +656,7 @@ function finalizePrint(items, config) {
   var tagCount = renderAll(items, config);
   document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ';
   beep();
-  waitForImagesReady().then(function () {
+  Promise.all([waitForFontsReady(), waitForImagesReady()]).then(function () {
     window.print();
   });
 }
@@ -682,11 +713,12 @@ document.getElementById('tbTestBtn').addEventListener('click', function () {
   ];
   var tagCount = renderAll(demoItems, normalizeConfig({}));
   document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ (ทดสอบ)';
-  waitForImagesReady().then(function () {
+  Promise.all([waitForFontsReady(), waitForImagesReady()]).then(function () {
     window.print();
   });
 });
 
+warmUpFonts();
 connectAbly();
 </script>
 
