@@ -45,6 +45,9 @@
     --ribbon-f-sz: 10px;
     --ribbon-x: -32px;
     --ribbon-y: 15px;
+    --oos-w: 5.4cm;
+    --oos-h: 1.4cm;
+    --oos-sz: 22px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -174,6 +177,17 @@
     .tag-large-body { border-bottom: 1px dashed #000 !important; }
     .dual-div, .tag-large-divider { border-right: 1px dashed #000 !important; }
   }
+
+  /* ============ OOS STRIP (แถบสินค้าหมด — ปิดทับช่องราคาของป้ายเดิม) ============ */
+  .price-tag-oos { width: var(--oos-w); height: var(--oos-h); background:#000; flex-direction:row; align-items:center; justify-content:center; gap:8px; padding:0 8px; }
+  .oos-main { color:#fff; font-size:var(--oos-sz); font-weight:900; letter-spacing:2px; line-height:1; white-space:nowrap; }
+  .oos-eta  { color:#fff; font-size:calc(var(--meta-sz) + 1px); font-weight:700; border-left:1px solid #fff; padding-left:8px; white-space:nowrap; }
+
+  .warn-banner { background: var(--r); color: #fff; font-weight: 700; font-size: 14px; padding: 10px 20px; text-align: center; }
+
+  @media print {
+    .warn-banner { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -192,6 +206,8 @@
     <button class="tb-btn" id="tbTestBtn">ทดสอบพิมพ์ตัวอย่าง</button>
     <button class="tb-btn primary" id="tbReconnectBtn">เชื่อมต่อใหม่</button>
   </div>
+
+  <div class="warn-banner" id="warnBanner" hidden></div>
 
   <div class="page-scroll">
     <div id="print-area">
@@ -225,8 +241,10 @@ var DEFAULT_CONFIG = {
   priceSz: 46, dualSz: 28, metaSz: 10,
   ribbonSz: 10, ribbonX: -32, ribbonY: 15,
   largeW: 11.4, largeH: 6.0, bcHeightLrg: 35,
+  oosW: 5.4, oosH: 1.4, oosSz: 22,
+  labelOos: 'สินค้าหมด', labelStop: 'เลิกจำหน่าย',
 };
-var CONFIG_NUMERIC_KEYS = ['w','h','bcHeight','globalNameSz','priceSz','dualSz','metaSz','ribbonSz','ribbonX','ribbonY','largeW','largeH','bcHeightLrg'];
+var CONFIG_NUMERIC_KEYS = ['w','h','bcHeight','globalNameSz','priceSz','dualSz','metaSz','ribbonSz','ribbonX','ribbonY','largeW','largeH','bcHeightLrg','oosW','oosH','oosSz'];
 
 function normalizeConfig(raw) {
   var merged = Object.assign({}, DEFAULT_CONFIG, raw || {});
@@ -240,6 +258,8 @@ function normalizeConfig(raw) {
   merged.labelSize = String(merged.labelSize != null ? merged.labelSize : DEFAULT_CONFIG.labelSize);
   merged.labelUnit = String(merged.labelUnit != null ? merged.labelUnit : DEFAULT_CONFIG.labelUnit);
   merged.labelRetail = String(merged.labelRetail != null ? merged.labelRetail : DEFAULT_CONFIG.labelRetail);
+  merged.labelOos = String(merged.labelOos != null ? merged.labelOos : DEFAULT_CONFIG.labelOos);
+  merged.labelStop = String(merged.labelStop != null ? merged.labelStop : DEFAULT_CONFIG.labelStop);
   return merged;
 }
 
@@ -273,6 +293,8 @@ function normalizeItem(raw) {
     Exp: String(pick(q, ['Exp', 'exp'], '')),
     Image: String(pick(q, ['Image', 'image'], '')),
     PrintQty: Number(pick(q, ['PrintQty', 'printQty', 'Qty', 'qty'], 1)) || 1,
+    OosEta: String(pick(q, ['OosEta', 'oosEta'], '')),
+    OosReason: String(pick(q, ['OosReason', 'oosReason'], 'temp')),
   };
 }
 
@@ -324,12 +346,22 @@ function applyCSSVars(config) {
   set('--ribbon-x', config.ribbonX != null ? config.ribbonX : -32, 'px');
   set('--ribbon-y', config.ribbonY != null ? config.ribbonY : 15, 'px');
   set('--f-tag', config.font);
+  set('--oos-w', config.oosW || 5.4, 'cm');
+  set('--oos-h', config.oosH || 1.4, 'cm');
+  set('--oos-sz', config.oosSz || 22, 'px');
 }
 
 /* ============================================================
  * render — พอร์ตมาจาก src/components/PriceTag.tsx ตรงตัว (JSX -> template string)
  * ============================================================ */
 function buildTagHTML(item, config) {
+  if (item.TagMode === 'oos') {
+    var stop = item.OosReason === 'stop';
+    var mainLabel = stop ? (config.labelStop || 'เลิกจำหน่าย') : (config.labelOos || 'สินค้าหมด');
+    var etaHTML = (!stop && item.OosEta) ? '<div class="oos-eta">เข้า ' + escapeHTML(item.OosEta) + '</div>' : '';
+    return '<div class="price-tag price-tag-oos"><div class="oos-main">' + escapeHTML(mainLabel) + '</div>' + etaHTML + '</div>';
+  }
+
   var isLarge = item.TagMode === 'large';
   var bcHeightStd = config.bcHeight || 24;
   var bcHeightLrg = config.bcHeightLrg || 35;
@@ -652,7 +684,36 @@ function pendingBatchReceivedCount() {
   return n;
 }
 
+/* known TagMode values this printer knows how to render — a value outside this list
+ * means the sender (wongwian-tags-mobile) shipped a tag type this printer predates.
+ * ห้ามพิมพ์เงียบ: refuse the whole job and warn instead of silently rendering a
+ * blank/wrong tag for the unknown mode. */
+var VALID_TAG_MODES = ['standard', 'dual', 'large', 'oos'];
+
+function showWarning(msg) {
+  var el = document.getElementById('warnBanner');
+  if (el) {
+    el.textContent = msg;
+    el.hidden = false;
+  }
+  beep();
+}
+
+function hideWarning() {
+  var el = document.getElementById('warnBanner');
+  if (el) el.hidden = true;
+}
+
 function finalizePrint(items, config) {
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    if (!VALID_TAG_MODES.includes(it.TagMode)) {
+      showWarning('ได้รับป้ายชนิดที่ไม่รู้จัก: ' + it.TagMode + ' — กรุณาอัปเดตเครื่องพิมพ์ก่อน');
+      return;
+    }
+  }
+  hideWarning();
+
   var tagCount = renderAll(items, config);
   document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ';
   beep();
