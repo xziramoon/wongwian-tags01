@@ -99,6 +99,15 @@ export default function SettingsFold() {
             <SliderRow configKey="bcHeightLrg" full />
           </div>
         </div>
+
+        <div className="panel">
+          <div className="p-lbl">ตั้งค่าแถบสินค้าหมด</div>
+          <div className="cfg-grid">
+            <SliderRow configKey="oosW" />
+            <SliderRow configKey="oosH" />
+            <SliderRow configKey="oosSz" full />
+          </div>
+        </div>
       </div>
     </details>
   );

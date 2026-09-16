@@ -26,7 +26,12 @@ export default function PrintFooter() {
     setSending(true);
     setProgressLabel('');
     try {
-      await printBridge.publish(config, queue, (sent, total) => {
+      // แถบสินค้าหมด (oos) สูงแค่ 1.4 ซม. ไม่เท่าป้ายอื่น (4.0 ซม.) — ถ้าปนกลางแถวใน A4
+      // จะเกิดช่องว่างฟันหลอ เรียงแถบไปท้ายสุดของงานพิมพ์เสมอ
+      const ordered = [...queue].sort(
+        (a, b) => (a.TagMode === 'oos' ? 1 : 0) - (b.TagMode === 'oos' ? 1 : 0),
+      );
+      await printBridge.publish(config, ordered, (sent, total) => {
         if (total > 1) setProgressLabel(`${sent}/${total}`);
       });
       showToast('ส่งพิมพ์ไปเครื่องพิมพ์ปลายทางแล้ว ✓', 'success');

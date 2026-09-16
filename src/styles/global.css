@@ -34,6 +34,9 @@
   --ribbon-f-sz: 10px;
   --ribbon-x: -32px;
   --ribbon-y: 15px;
+  --oos-w: 5.4cm;
+  --oos-h: 1.4cm;
+  --oos-sz: 22px;
 }
 
 @keyframes modal-in {
@@ -474,6 +477,16 @@ select.inp {
   font-size: 16px;
   font-weight: 600;
   flex: 1;
+}
+.queue-row-loc {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
 }
 .q-thumb-mini {
   width: 46px;

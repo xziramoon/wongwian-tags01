@@ -34,6 +34,11 @@ export default function QueueItemCard({ item, index }: Props) {
 
       <div className="q-row">
         {item.Image && <img className="q-thumb-mini" src={item.Image} title="รูปสินค้า" onError={(e) => ((e.currentTarget as HTMLImageElement).style.opacity = '.2')} />}
+        {item.Loc && (
+          <span className="queue-row-loc" title="ตำแหน่งชั้น-แถว">
+            {item.Loc}
+          </span>
+        )}
         <input
           className="qi name"
           value={item.ProductName}
@@ -90,8 +95,36 @@ export default function QueueItemCard({ item, index }: Props) {
           <div className={`mode-btn${item.TagMode === 'large' ? ' active' : ''}`} onClick={() => set('TagMode', 'large')}>
             ป้ายใหญ่
           </div>
+          <div className={`mode-btn${item.TagMode === 'oos' ? ' active' : ''}`} onClick={() => set('TagMode', 'oos')}>
+            สินค้าหมด
+          </div>
         </div>
       </div>
+
+      {item.TagMode === 'oos' && (
+        <div>
+          <span className="q-lbl">สถานะ</span>
+          <div className="mode-btns" style={{ gridTemplateColumns: '1fr 1fr' }}>
+            <div className={`mode-btn${item.OosReason !== 'stop' ? ' active' : ''}`} onClick={() => set('OosReason', 'temp')}>
+              หมดชั่วคราว
+            </div>
+            <div className={`mode-btn${item.OosReason === 'stop' ? ' active' : ''}`} onClick={() => set('OosReason', 'stop')}>
+              เลิกจำหน่าย
+            </div>
+          </div>
+          {item.OosReason !== 'stop' && (
+            <div className="q-field">
+              <span className="q-lbl">วันที่ของเข้า</span>
+              <input
+                className="qi"
+                value={item.OosEta || ''}
+                onChange={(e) => set('OosEta', e.target.value)}
+                placeholder="เช่น 18 ก.ย. (ข้ามได้)"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {item.TagMode === 'dual' && (
         <div className="mode-btns" style={{ gridTemplateColumns: '1fr 1fr' }}>
@@ -125,6 +158,15 @@ export default function QueueItemCard({ item, index }: Props) {
             <div className="q-field">
               <span className="q-lbl">หน่วยขาย</span>
               <input className="qi" value={item.Unit} onChange={(e) => set('Unit', e.target.value)} placeholder="ชิ้น" />
+            </div>
+            <div className="q-field">
+              <span className="q-lbl">ตำแหน่งชั้น-แถว (Loc)</span>
+              <input
+                className="qi"
+                value={item.Loc || ''}
+                onChange={(e) => set('Loc', e.target.value.toUpperCase().slice(0, 5))}
+                placeholder="เช่น A-3 (ว่าง = ไม่ระบุ)"
+              />
             </div>
             <div className="q-field">
               <span className="q-lbl">ริบบิ้นมุมป้าย</span>

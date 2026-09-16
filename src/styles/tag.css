@@ -91,3 +91,8 @@
 @media print {
   .loc-chip { background:#fff !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 }
+
+/* ============ OOS STRIP (แถบสินค้าหมด — ปิดทับช่องราคาของป้ายเดิม) ============ */
+.price-tag-oos { width: var(--oos-w); height: var(--oos-h); background:#000; flex-direction:row; align-items:center; justify-content:center; gap:8px; padding:0 8px; }
+.oos-main { color:#fff; font-size:var(--oos-sz); font-weight:900; letter-spacing:2px; line-height:1; white-space:nowrap; }
+.oos-eta  { color:#fff; font-size:calc(var(--meta-sz) + 1px); font-weight:700; border-left:1px solid #fff; padding-left:8px; white-space:nowrap; }

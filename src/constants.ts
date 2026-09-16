@@ -54,6 +54,9 @@ export const SLIDER_DEFS: Record<string, SliderDef> = {
   largeW: { label: 'LARGE W (cm)', min: 5, max: 20, step: 0.1, def: 11.4 },
   largeH: { label: 'LARGE H (cm)', min: 3, max: 15, step: 0.1, def: 6.0 },
   bcHeightLrg: { label: 'LARGE BC HEIGHT', min: 10, max: 80, step: 1, def: 35 },
+  oosW: { label: 'OOS W (cm)', min: 2, max: 15, step: 0.1, def: 5.4 },
+  oosH: { label: 'OOS H (cm)', min: 0.8, max: 4, step: 0.1, def: 1.4 },
+  oosSz: { label: 'OOS TEXT', min: 10, max: 40, step: 1, def: 22 },
 };
 
 export const SIZE_PRESETS: Record<string, Partial<Config>> = {
@@ -83,4 +86,9 @@ export const DEFAULT_CONFIG: Config = {
   largeW: SLIDER_DEFS.largeW.def,
   largeH: SLIDER_DEFS.largeH.def,
   bcHeightLrg: SLIDER_DEFS.bcHeightLrg.def,
+  oosW: SLIDER_DEFS.oosW.def,
+  oosH: SLIDER_DEFS.oosH.def,
+  oosSz: SLIDER_DEFS.oosSz.def,
+  labelOos: 'สินค้าหมด',
+  labelStop: 'เลิกจำหน่าย',
 };
