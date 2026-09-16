@@ -81,3 +81,13 @@
   .tag-large-body { border-bottom: 1px dashed #000 !important; }
   .dual-div, .tag-large-divider { border-right: 1px dashed #000 !important; }
 }
+
+/* ============ LOC HEADER (รหัสชั้น-แถว บนหัวป้าย) ============ */
+.tag-header.hs { display:flex; align-items:center; gap:3px; padding:3px 2px; letter-spacing:0; }
+.hs-name { flex:1 1 auto; min-width:0; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:1px; }
+.loc-chip { flex:0 0 auto; background:#fff; color:#000; font-size:11px; font-weight:900; line-height:12px; padding:0 4px; border-radius:2px; white-space:nowrap; }
+.tag-header.hl { font-size:11px; letter-spacing:.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+@media print {
+  .loc-chip { background:#fff !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}

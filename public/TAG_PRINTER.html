@@ -163,6 +163,12 @@
   .tag-baht-large { font-size: calc(var(--meta-sz) + 6px); font-weight: 800; color: #000; margin-left: 8px; }
   .pack-icon { display:inline-block; font-size:calc(var(--meta-sz) + 2px); margin-right:3px; }
 
+  /* ============ LOC HEADER (รหัสชั้น-แถว บนหัวป้าย) — เพิ่มต่อจาก src/styles/tag.css ============ */
+  .tag-header.hs { display:flex; align-items:center; gap:3px; padding:3px 2px; letter-spacing:0; }
+  .hs-name { flex:1 1 auto; min-width:0; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:1px; }
+  .loc-chip { flex:0 0 auto; background:#fff; color:#000; font-size:11px; font-weight:900; line-height:12px; padding:0 4px; border-radius:2px; white-space:nowrap; }
+  .tag-header.hl { font-size:11px; letter-spacing:.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
   @media print {
     @page { margin:0; size: auto; }
     body { background:#fff !important; color:#000 !important; overflow:visible; }
@@ -176,6 +182,10 @@
     .tag-bc-area { border-top: 1px dashed #000 !important; }
     .tag-large-body { border-bottom: 1px dashed #000 !important; }
     .dual-div, .tag-large-divider { border-right: 1px dashed #000 !important; }
+  }
+
+  @media print {
+    .loc-chip { background:#fff !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 
   /* ============ OOS STRIP (แถบสินค้าหมด — ปิดทับช่องราคาของป้ายเดิม) ============ */
@@ -295,6 +305,7 @@ function normalizeItem(raw) {
     PrintQty: Number(pick(q, ['PrintQty', 'printQty', 'Qty', 'qty'], 1)) || 1,
     OosEta: String(pick(q, ['OosEta', 'oosEta'], '')),
     OosReason: String(pick(q, ['OosReason', 'oosReason'], 'temp')),
+    Loc: String(pick(q, ['Loc', 'loc'], '')),
   };
 }
 
@@ -326,6 +337,28 @@ function heroScale(s) {
   if (len === 5) return 0.7;
   if (len === 6) return 0.58;
   return 0.48;
+}
+
+/* renderHeaderHTML — พอร์ตมาจาก src/components/PriceTag.tsx renderHeader() ตรงตัว */
+function renderHeaderHTML(item, config) {
+  var loc = String(item.Loc || '').trim().slice(0, 5);
+  if (!loc) {
+    return '<div class="tag-header">' + escapeHTML(config.header || ' ') + '</div>';
+  }
+  var isLargeHdr = item.TagMode === 'large';
+  var tagWidth = isLargeHdr ? config.largeW : config.w;
+  if (tagWidth >= 4.0) {
+    return '<div class="tag-header hs">' +
+      '<span class="loc-chip">' + escapeHTML(loc) + '</span>' +
+      '<span class="hs-name">' + escapeHTML(config.header || ' ') + '</span>' +
+      '<span class="loc-chip" style="visibility:hidden">' + escapeHTML(loc) + '</span>' +
+    '</div>';
+  }
+  var locParts = loc.split('-');
+  var floor = locParts[0];
+  var row = locParts[1];
+  var label = row ? ('ชั้น ' + floor + ' · แถว ' + row) : ('ชั้น ' + floor);
+  return '<div class="tag-header hl">' + escapeHTML(label) + '</div>';
 }
 
 /* applyCSSVars — ยกมาจาก src/lib/cssVars.ts ตรงตัว */
@@ -498,7 +531,7 @@ function buildTagHTML(item, config) {
   return (
     '<div class="price-tag ' + tagClass + '">' +
       (safeRibbon ? '<div class="tag-ribbon">' + escapeHTML(safeRibbon) + '</div>' : '') +
-      '<div class="tag-header">' + escapeHTML(config.header || ' ') + '</div>' +
+      renderHeaderHTML(item, config) +
       middle +
       '<div class="tag-bc-area"><svg class="bc-svg" data-barcode="' + escapeHTML(item.Barcode) + '" data-large="' + isLarge + '" data-bch="' + (isLarge ? bcHeightLrg : bcHeightStd) + '"></svg></div>' +
     '</div>'
@@ -771,6 +804,7 @@ document.getElementById('tbTestBtn').addEventListener('click', function () {
   var demoItems = [
     normalizeItem({ Barcode: '8850999123456', ProductName: 'ทดสอบพิมพ์ป้ายราคา (มาตรฐาน)', TagMode: 'standard', Price: '39.00', Size: '500 มล.', PrintQty: 1 }),
     normalizeItem({ Barcode: '8850999654321', ProductName: 'ทดสอบพิมพ์ป้าย (ราคาคู่)', TagMode: 'dual', Price: '25.00', Price2: '220.00', Unit2: 'ยกลัง', PrintQty: 1 }),
+    normalizeItem({ Barcode: '8850999111222', ProductName: 'ทดสอบพิมพ์ป้าย (มีรหัสชั้น-แถว)', TagMode: 'standard', Price: '15.00', Size: '1 ชิ้น', Loc: 'A-3', PrintQty: 1 }),
   ];
   var tagCount = renderAll(demoItems, normalizeConfig({}));
   document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ (ทดสอบ)';

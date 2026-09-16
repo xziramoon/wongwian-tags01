@@ -30,6 +30,30 @@ const heroScale = (s: string) => {
   return 0.48;
 };
 
+/* หัวป้าย: แสดงรหัสชั้น-แถว (item.Loc) ถ้ามี — ไม่มีค่า = markup เดิมทุกตัวอักษร */
+function renderHeader(item: QueueItem, config: Config) {
+  const loc = (item.Loc || '').trim().slice(0, 5);
+  if (!loc) {
+    return <div className="tag-header">{config.header || ' '}</div>;
+  }
+  const isLarge = item.TagMode === 'large';
+  const tagWidth = isLarge ? config.largeW : config.w;
+  if (tagWidth >= 4.0) {
+    return (
+      <div className="tag-header hs">
+        <span className="loc-chip">{loc}</span>
+        <span className="hs-name">{config.header || ' '}</span>
+        <span className="loc-chip" style={{ visibility: 'hidden' }}>
+          {loc}
+        </span>
+      </div>
+    );
+  }
+  const [floor, row] = loc.split('-');
+  const label = row ? `ชั้น ${floor} · แถว ${row}` : `ชั้น ${floor}`;
+  return <div className="tag-header hl">{label}</div>;
+}
+
 export default function PriceTag({ item, config, queueIndex, selected }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const selectTag = useUIStore((s) => s.selectTag);
@@ -298,7 +322,7 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
       }}
     >
       {safeRibbon && <div className="tag-ribbon">{safeRibbon}</div>}
-      <div className="tag-header">{config.header || ' '}</div>
+      {renderHeader(item, config)}
       {middle}
       <div className="tag-bc-area">
         <svg ref={svgRef} />
