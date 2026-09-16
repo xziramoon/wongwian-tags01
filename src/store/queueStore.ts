@@ -36,6 +36,7 @@ function normalize(q: Partial<QueueItem>): QueueItem {
     Image: '',
     PrintQty: 1,
     PriceDiff: null,
+    Loc: '',
     ...q,
   };
 }
@@ -173,7 +174,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     code = String(code).trim();
     if (!code) return;
     const { queue, config } = get();
-    const existingIdx = queue.findIndex((i) => i.Barcode === code);
+    const existingIdx = queue.findIndex((i) => i.Barcode === code && (i.Loc || '') === '');
     const product = database.find(code);
 
     if (existingIdx !== -1) {

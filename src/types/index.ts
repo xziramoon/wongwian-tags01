@@ -22,6 +22,7 @@ export interface QueueItem {
   Image: string;
   PrintQty: number;
   PriceDiff: string | null;
+  Loc: string;
 }
 
 export interface Config {
