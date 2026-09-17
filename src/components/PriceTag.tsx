@@ -113,6 +113,7 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
   const safeRibbon = (item.Ribbon || '').trim();
   const safePack = (item.PackType || '').trim();
   const imgURL = (item.Image || '').trim();
+  const printed = (item.Printed || '').trim().slice(0, 8);
 
   const bahtEl = invBaht ? (
     <span className="tag-baht-inv">บาท</span>
@@ -341,8 +342,9 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
       {safeRibbon && <div className="tag-ribbon">{safeRibbon}</div>}
       {renderHeader(item, config)}
       {middle}
-      <div className="tag-bc-area">
+      <div className={`tag-bc-area${printed ? ' has-date' : ''}`}>
         <svg ref={svgRef} />
+        {printed && <span className="bc-date">{printed}</span>}
       </div>
     </div>
   );

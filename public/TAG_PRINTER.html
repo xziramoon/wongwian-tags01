@@ -168,6 +168,8 @@
   .hs-name { flex:1 1 auto; min-width:0; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:1px; }
   .loc-chip { flex:0 0 auto; background:#fff; color:#000; font-size:11px; font-weight:900; line-height:12px; padding:0 4px; border-radius:2px; white-space:nowrap; }
   .tag-header.hl { font-size:11px; letter-spacing:.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tag-bc-area.has-date { position:relative; }
+  .bc-date { position:absolute; right:2px; bottom:1px; font-size:8px; font-weight:700; line-height:1; background:#fff; color:#000; padding:0 1px; white-space:nowrap; }
 
   @media print {
     @page { margin:0; size: auto; }
@@ -185,7 +187,7 @@
   }
 
   @media print {
-    .loc-chip { background:#fff !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .loc-chip, .bc-date { background:#fff !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 
   /* ============ OOS STRIP (แถบสินค้าหมด — ปิดทับช่องราคาของป้ายเดิม) ============ */
@@ -306,6 +308,7 @@ function normalizeItem(raw) {
     OosEta: String(pick(q, ['OosEta', 'oosEta'], '')),
     OosReason: String(pick(q, ['OosReason', 'oosReason'], 'temp')),
     Loc: String(pick(q, ['Loc', 'loc'], '')),
+    Printed: String(pick(q, ['Printed', 'printed'], '')),
   };
 }
 
@@ -414,6 +417,7 @@ function buildTagHTML(item, config) {
   var safeRibbon = (item.Ribbon || '').trim();
   var safePack = (item.PackType || '').trim();
   var imgURL = (item.Image || '').trim();
+  var printed = (item.Printed || '').trim().slice(0, 8);
   var nameFontSize = item.NameFontSize || 13;
 
   var bahtHTML = invBaht
@@ -533,7 +537,7 @@ function buildTagHTML(item, config) {
       (safeRibbon ? '<div class="tag-ribbon">' + escapeHTML(safeRibbon) + '</div>' : '') +
       renderHeaderHTML(item, config) +
       middle +
-      '<div class="tag-bc-area"><svg class="bc-svg" data-barcode="' + escapeHTML(item.Barcode) + '" data-large="' + isLarge + '" data-bch="' + (isLarge ? bcHeightLrg : bcHeightStd) + '"></svg></div>' +
+      '<div class="tag-bc-area' + (printed ? ' has-date' : '') + '"><svg class="bc-svg" data-barcode="' + escapeHTML(item.Barcode) + '" data-large="' + isLarge + '" data-bch="' + (isLarge ? bcHeightLrg : bcHeightStd) + '"></svg>' + (printed ? '<span class="bc-date">' + escapeHTML(printed) + '</span>' : '') + '</div>' +
     '</div>'
   );
 }
@@ -804,7 +808,7 @@ document.getElementById('tbTestBtn').addEventListener('click', function () {
   var demoItems = [
     normalizeItem({ Barcode: '8850999123456', ProductName: 'ทดสอบพิมพ์ป้ายราคา (มาตรฐาน)', TagMode: 'standard', Price: '39.00', Size: '500 มล.', PrintQty: 1 }),
     normalizeItem({ Barcode: '8850999654321', ProductName: 'ทดสอบพิมพ์ป้าย (ราคาคู่)', TagMode: 'dual', Price: '25.00', Price2: '220.00', Unit2: 'ยกลัง', PrintQty: 1 }),
-    normalizeItem({ Barcode: '8850999111222', ProductName: 'ทดสอบพิมพ์ป้าย (มีรหัสชั้น-แถว)', TagMode: 'standard', Price: '15.00', Size: '1 ชิ้น', Loc: 'A-3', PrintQty: 1 }),
+    normalizeItem({ Barcode: '8850999111222', ProductName: 'ทดสอบพิมพ์ป้าย (มีรหัสชั้น-แถว)', TagMode: 'standard', Price: '15.00', Size: '1 ชิ้น', Loc: 'A-3', Printed: '17/9/69', PrintQty: 1 }),
   ];
   var tagCount = renderAll(demoItems, normalizeConfig({}));
   document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ (ทดสอบ)';
