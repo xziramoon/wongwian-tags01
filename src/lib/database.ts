@@ -11,6 +11,13 @@ const HEADER_WORDS = ['barcode', 'price', 'ราคา', 'บาร์โค้
 
 export type DatabaseListener = (data: Product[]) => void;
 
+/* the shared product sheet runs ~38k rows — a single-character query can match a
+ * large slice of it, so below MIN_QUERY_LENGTH we don't search at all, and above
+ * SEARCH_RESULT_CAP we stop scanning early instead of filtering the full array
+ * then slicing (mirrors wongwian-tags-mobile/src/lib/database.ts search()) */
+export const MIN_QUERY_LENGTH = 2;
+const SEARCH_RESULT_CAP = 12;
+
 class DatabaseService {
   data: Product[] = [];
   index: Record<string, Product> = {};
@@ -134,10 +141,15 @@ class DatabaseService {
 
   search(query: string): Product[] {
     const q = query.toLowerCase().trim();
-    if (!q) return [];
-    return this.data
-      .filter((p) => String(p.ProductName || '').toLowerCase().includes(q) || String(p.Barcode || '').includes(q))
-      .slice(0, 12);
+    if (q.length < MIN_QUERY_LENGTH) return [];
+    const results: Product[] = [];
+    for (const p of this.data) {
+      if (results.length >= SEARCH_RESULT_CAP) break;
+      if (String(p.ProductName || '').toLowerCase().includes(q) || String(p.Barcode || '').includes(q)) {
+        results.push(p);
+      }
+    }
+    return results;
   }
 }
 

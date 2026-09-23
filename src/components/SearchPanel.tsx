@@ -1,28 +1,39 @@
-import { useEffect, useRef, useState } from 'react';
-import { database } from '../lib/database';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { database, MIN_QUERY_LENGTH } from '../lib/database';
 import { useQueueStore } from '../store/queueStore';
+import { debounce } from '../lib/utils';
 import type { Product } from '../types';
 import ScannerStatus from './ScannerStatus';
 
 export default function SearchPanel() {
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
   const [open, setOpen] = useState(false);
   const addFromBarcode = useQueueStore((s) => s.addFromBarcode);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // the product sheet runs ~38k rows, so database.search() gets scanned on every
+  // keystroke — debounce so fast typing doesn't stack up a full-table scan per
+  // character (this used to make typing feel sluggish/stuck on a large catalog)
+  const applyDebounced = useMemo(() => debounce((q: string) => setDebouncedQuery(q), 150), []);
+
   useEffect(() => {
-    if (!query) {
+    applyDebounced(query);
+  }, [query, applyDebounced]);
+
+  useEffect(() => {
+    if (!debouncedQuery) {
       setResults([]);
       setOpen(false);
       return;
     }
-    setResults(database.search(query));
+    setResults(database.search(debouncedQuery));
     setOpen(true);
     // re-run the search if the product database refreshes in the background
     // (e.g. the 5-minute auto price-check) while the dropdown is still open
-    return database.onChange(() => setResults(database.search(query)));
-  }, [query]);
+    return database.onChange(() => setResults(database.search(debouncedQuery)));
+  }, [debouncedQuery]);
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -58,7 +69,12 @@ export default function SearchPanel() {
           />
         </div>
         <div className={`search-drop${open ? ' open' : ''}`}>
-          {open && results.length === 0 && (
+          {open && query.trim().length < MIN_QUERY_LENGTH && (
+            <div className="s-item">
+              <span className="s-meta">พิมพ์อย่างน้อย {MIN_QUERY_LENGTH} ตัวอักษร</span>
+            </div>
+          )}
+          {open && query.trim().length >= MIN_QUERY_LENGTH && results.length === 0 && (
             <div className="s-item">
               <span className="s-meta" style={{ color: 'var(--r)' }}>
                 ✕ ไม่พบสินค้า
