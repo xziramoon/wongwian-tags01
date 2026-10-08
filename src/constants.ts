@@ -95,6 +95,9 @@ export const DEFAULT_CONFIG: Config = {
   priceInk: 'black',
   inkTilt: false,
   headerCN: '',
+  tagTheme: 'classic',
+  headerSub: '',
+  branchLabel: '',
 };
 
 /* ฟอนต์ตัวเลขราคา — หมึกพู่กันญี่ปุ่น/จีน (โหลดจาก Google Fonts ใน index.html และ TAG_PRINTER.html) */
@@ -109,3 +112,10 @@ export const PRICE_FONTS: { value: string; label: string }[] = [
   { value: "'Ma Shan Zheng',cursive", label: 'พู่กันจีน · Ma Shan Zheng' },
 ];
 export const INK_RED = '#C0141C';
+export const THEME_ACCENT = '#B3261E';
+
+/* ค่าตั้งสำเร็จรูปของธีม — กดปุ่มในหน้าตั้งค่าแล้วใส่ให้ครบทีเดียว */
+export const THEME_PRESETS: Record<string, Partial<Config>> = {
+  korean: { tagTheme: 'korean', header: 'อึ้งลักเส็ง', headerCN: '黄六盛', headerSub: 'ซุปเปอร์มาร์เก็ต', branchLabel: 'สาขาวงเวียน' },
+  ink: { tagTheme: 'ink', header: 'อึ้งลักเส็ง', headerCN: '黄六盛', headerSub: 'ซุปเปอร์มาร์เก็ต', branchLabel: 'สาขาวงเวียน' },
+};

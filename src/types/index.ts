@@ -58,6 +58,9 @@ export interface Config {
   priceInk: string; // 'black' | 'red'
   inkTilt: boolean;
   headerCN: string; // ชื่อจีนบนหัวป้าย เช่น 黄六盛
+  tagTheme: string; // 'classic' | 'korean' | 'ink' — ธีมป้ายปกติ
+  headerSub: string; // ข้อความขวาบนหัวป้าย (ธีมใหม่) เช่น ซุปเปอร์มาร์เก็ต
+  branchLabel: string; // ชื่อสาขามุมล่างซ้าย (ธีมใหม่) เช่น สาขาวงเวียน
   [key: string]: string | number | boolean | undefined;
 }
 

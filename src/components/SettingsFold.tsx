@@ -1,11 +1,22 @@
 import { useQueueStore } from '../store/queueStore';
 import SliderRow from './SliderRow';
-import { PRICE_FONTS } from '../constants';
+import { PRICE_FONTS, THEME_PRESETS } from '../constants';
 
 export default function SettingsFold() {
   const config = useQueueStore((s) => s.config);
   const updateConfig = useQueueStore((s) => s.updateConfig);
   const applyPreset = useQueueStore((s) => s.applyPreset);
+
+  /* ใส่ค่าตั้งของธีมครบชุด แต่ไม่ทับช่องที่ผู้ใช้กรอกเองไว้แล้ว (ยกเว้น tagTheme) */
+  const applyTheme = (name: 'korean' | 'ink') => {
+    const preset = THEME_PRESETS[name];
+    Object.entries(preset).forEach(([k, v]) => {
+      const key = k as keyof typeof config;
+      const cur = String(config[key] ?? '').trim();
+      const isDefaultHeader = key === 'header' && (cur === '' || cur === 'ร้านวงเวียน');
+      if (key === 'tagTheme' || cur === '' || isDefaultHeader) updateConfig(key, v as string);
+    });
+  };
 
   return (
     <details className="fold">
@@ -41,6 +52,55 @@ export default function SettingsFold() {
                 <option value="'Sarabun',sans-serif">Sarabun</option>
                 <option value="'Mitr',sans-serif">Mitr</option>
               </select>
+            </div>
+
+            <div className="cfg-full">
+              <span className="cfg-lbl">ธีมป้ายปกติ</span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                <button
+                  className="btn btn-preset"
+                  aria-pressed={!config.tagTheme || config.tagTheme === 'classic'}
+                  onClick={() => updateConfig('tagTheme', 'classic')}
+                >
+                  แบบเดิม
+                </button>
+                <button
+                  className="btn btn-preset"
+                  aria-pressed={config.tagTheme === 'korean'}
+                  onClick={() => applyTheme('korean')}
+                >
+                  เกาหลี
+                </button>
+                <button
+                  className="btn btn-preset"
+                  aria-pressed={config.tagTheme === 'ink'}
+                  onClick={() => applyTheme('ink')}
+                >
+                  หมึกแดง
+                </button>
+              </div>
+              <span className="fold-hint">
+                ธีมใหม่ใช้สีแดง ต้องพิมพ์ด้วยเครื่องพิมพ์สี · ตรา SALE / 特价 ขึ้นเองเมื่อสินค้ามี "ราคาเดิม"
+              </span>
+            </div>
+
+            <div>
+              <span className="cfg-lbl">ข้อความขวาบนหัวป้าย</span>
+              <input
+                className="inp"
+                value={String(config.headerSub || '')}
+                onChange={(e) => updateConfig('headerSub', e.target.value)}
+                placeholder="ซุปเปอร์มาร์เก็ต"
+              />
+            </div>
+            <div>
+              <span className="cfg-lbl">ชื่อสาขา (มุมล่างซ้าย)</span>
+              <input
+                className="inp"
+                value={String(config.branchLabel || '')}
+                onChange={(e) => updateConfig('branchLabel', e.target.value)}
+                placeholder="สาขาวงเวียน"
+              />
             </div>
 
             <div className="cfg-full">

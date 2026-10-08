@@ -166,6 +166,81 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
       </div>
     ) : null;
 
+  /* ธีมป้าย เกาหลี / หมึกแดง (src/styles/tag-theme.css) — เฉพาะป้ายปกติ */
+  const theme = config.tagTheme === 'korean' ? 'theme-kr' : config.tagTheme === 'ink' ? 'theme-ink' : '';
+  if (theme && (item.TagMode === 'standard' || !item.TagMode)) {
+    const loc = (item.Loc || '').trim().slice(0, 5);
+    const cn = String(config.headerCN || '').trim();
+    const sub = String(config.headerSub || '').trim();
+    const branch = String(config.branchLabel || '').trim();
+    const promo = !!(item.OldPrice && parseFloat(item.OldPrice) > 0);
+    const hasP2 = !!(item.Price2 && String(item.Price2).trim() !== '');
+    const sizeLine = [safeSize && `${LBL_SIZE} ${safeSize}`, `${LBL_UNIT} 1 ${safeUnit}`].filter(Boolean).join(' · ');
+    const ps = heroScale(pDisp);
+    return (
+      <div
+        className={`price-tag price-tag-normal ${theme}${selected ? ' selected' : ''}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          selectTag(queueIndex);
+        }}
+      >
+        {safeRibbon && <div className="tag-ribbon">{safeRibbon}</div>}
+        <div className="th-head">
+          <div className="th-brand">
+            {loc && <span className="loc-chip">{loc}</span>}
+            <span>{config.header || ' '}</span>
+            {cn && <span className="th-cn">{cn}</span>}
+          </div>
+          {sub && <div className="th-sub">{sub}</div>}
+        </div>
+        <div className="th-body">
+          <div>
+            <div className="th-name" style={{ fontSize: `${item.NameFontSize || 13}px` }}>
+              {item.ProductName}
+            </div>
+            <div className="th-sizeline">{sizeLine}</div>
+          </div>
+          <div className="th-row">
+            <div className="th-badges">
+              {hasP2 && (
+                <span className="th-badge-solid">
+                  {safeUnit2 || 'ราคาส่ง'} {p2Disp} บ.
+                </span>
+              )}
+              {promo && (
+                <span className="th-badge-line">
+                  ปกติ <del>{fmtPrice(item.OldPrice)}</del>
+                </span>
+              )}
+              {packEl}
+            </div>
+            <div className="th-price-col" style={{ transform: `translateX(${xOffset}px)` }}>
+              {theme === 'theme-kr' && promo && <span className="th-pill">특가 · SALE</span>}
+              {theme === 'theme-ink' && promo && (
+                <div className="th-stamp">
+                  <span>特</span>
+                  <span>价</span>
+                </div>
+              )}
+              <div className="th-price-row">
+                <span className="th-price" style={{ fontSize: `calc(var(--price-sz) * ${ps})` }}>
+                  {pDisp}
+                </span>
+                <span className="th-baht">บาท</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className={`tag-bc-area${printed ? ' has-date' : ''}`}>
+          <svg ref={svgRef} />
+          {branch && <span className="bc-branch">{branch}</span>}
+          {printed && <span className="bc-date">{printed}</span>}
+        </div>
+      </div>
+    );
+  }
+
   let middle: React.ReactNode = null;
   let tagClass = 'price-tag-normal';
 

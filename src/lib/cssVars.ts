@@ -1,5 +1,5 @@
 import type { Config } from '../types';
-import { INK_RED } from '../constants';
+import { INK_RED, THEME_ACCENT } from '../constants';
 
 export function applyCSSVars(config: Config) {
   const root = document.documentElement.style;
@@ -19,6 +19,7 @@ export function applyCSSVars(config: Config) {
   set('--f-tag', config.font);
   set('--f-price', config.priceFont || config.font);
   set('--ink-red', INK_RED);
+  set('--th-accent', THEME_ACCENT);
   set('--oos-w', config.oosW || 5.4, 'cm');
   set('--oos-h', config.oosH || 1.4, 'cm');
   set('--oos-sz', config.oosSz || 22, 'px');
