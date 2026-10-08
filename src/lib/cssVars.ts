@@ -1,4 +1,5 @@
 import type { Config } from '../types';
+import { INK_RED } from '../constants';
 
 export function applyCSSVars(config: Config) {
   const root = document.documentElement.style;
@@ -16,6 +17,8 @@ export function applyCSSVars(config: Config) {
   set('--ribbon-x', config.ribbonX ?? -32, 'px');
   set('--ribbon-y', config.ribbonY ?? 15, 'px');
   set('--f-tag', config.font);
+  set('--f-price', config.priceFont || config.font);
+  set('--ink-red', INK_RED);
   set('--oos-w', config.oosW || 5.4, 'cm');
   set('--oos-h', config.oosH || 1.4, 'cm');
   set('--oos-sz', config.oosSz || 22, 'px');

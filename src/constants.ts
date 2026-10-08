@@ -91,4 +91,21 @@ export const DEFAULT_CONFIG: Config = {
   oosSz: SLIDER_DEFS.oosSz.def,
   labelOos: 'สินค้าหมด',
   labelStop: 'เลิกจำหน่าย',
+  priceFont: '',
+  priceInk: 'black',
+  inkTilt: false,
+  headerCN: '',
 };
+
+/* ฟอนต์ตัวเลขราคา — หมึกพู่กันญี่ปุ่น/จีน (โหลดจาก Google Fonts ใน index.html และ TAG_PRINTER.html) */
+export const PRICE_FONTS: { value: string; label: string }[] = [
+  { value: '', label: 'เหมือนตัวหนังสือ (เดิม)' },
+  { value: "'Potta One',cursive", label: 'J1 · Potta One — พู่กันหนา' },
+  { value: "'Yuji Boku',serif", label: 'J2 · Yuji Boku — พู่กันแห้ง' },
+  { value: "'Yuji Syuku',serif", label: 'J3 · Yuji Syuku — ลายมือพู่กัน' },
+  { value: "'Yuji Mai',serif", label: 'J4 · Yuji Mai — พู่กันอ่อนช้อย' },
+  { value: "'Zen Kurenaido',sans-serif", label: 'J5 · Zen Kurenaido — ปากกาพู่กัน' },
+  { value: "'Reggae One',cursive", label: 'J6 · Reggae One — หมึกขอบขรุขระ' },
+  { value: "'Ma Shan Zheng',cursive", label: 'พู่กันจีน · Ma Shan Zheng' },
+];
+export const INK_RED = '#C0141C';

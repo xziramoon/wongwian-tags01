@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง</title>
 <link
-  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@300;400;600;700&family=Mitr:wght@400;500;600&family=Prompt:wght@300;400;600;700&family=Sarabun:wght@300;400;600;700&display=swap"
+  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@300;400;600;700&family=Mitr:wght@400;500;600&family=Prompt:wght@300;400;600;700&family=Sarabun:wght@300;400;600;700&family=Potta+One&family=Yuji+Boku&family=Yuji+Syuku&family=Yuji+Mai&family=Zen+Kurenaido&family=Reggae+One&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@900&display=swap"
   rel="stylesheet"
 />
 <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
@@ -195,6 +195,73 @@
   .oos-main { color:#fff; font-size:var(--oos-sz); font-weight:900; letter-spacing:2px; line-height:1; white-space:nowrap; }
   .oos-eta  { color:#fff; font-size:calc(var(--meta-sz) + 1px); font-weight:700; border-left:1px solid #fff; padding-left:8px; white-space:nowrap; }
 
+  /* ============================================================
+   * INK / BRUSH PRICE + ชื่อจีนบนหัวป้าย — ส่วนเสริม (ไม่แตะ tag.css เดิม)
+   * ทำงานเฉพาะเมื่อเปิดใช้ในตั้งค่า:
+   *   .brush-price  → ตัวเลขราคาใช้ฟอนต์หมึกพู่กัน (var(--f-price))
+   *   .ink-red      → ตัวเลขราคาสีแดงหมึก (พิมพ์สีจริงด้วย print-color-adjust)
+   *   .ink-tilt     → เอียงตัวเลข + ขอบหมึกซึม
+   *   .hdr-cn       → ตราชื่อจีนบนหัวป้าย
+   * ⚠️ สำเนาตรงตัวจาก src/styles/tag-ink.css — แก้ที่นั่นต้องแก้ที่นี่ด้วย
+   * ============================================================ */
+
+  .price-tag.brush-price .tag-price,
+  .price-tag.brush-price .hero-price,
+  .price-tag.brush-price .dual-price-val,
+  .price-tag.brush-price .tag-price-large,
+  .price-tag.brush-price .ws-price,
+  .price-tag.brush-price .tag-large-box-price {
+    font-family: var(--f-price);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .price-tag.ink-red .tag-price,
+  .price-tag.ink-red .hero-price,
+  .price-tag.ink-red .dual-price-val,
+  .price-tag.ink-red .tag-price-large,
+  .price-tag.ink-red .tag-large-box-price {
+    color: var(--ink-red);
+  }
+
+  .price-tag.ink-tilt .tag-price,
+  .price-tag.ink-tilt .hero-price,
+  .price-tag.ink-tilt .dual-price-val,
+  .price-tag.ink-tilt .tag-price-large {
+    display: inline-block;
+    transform: rotate(-4deg);
+    text-shadow: 0 0 1px currentColor;
+  }
+
+  .hdr-cn {
+    display: inline-block;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    background: #fff;
+    color: #000;
+    padding: 0 3px;
+    margin-left: 4px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    line-height: 1.25;
+    vertical-align: middle;
+  }
+  .price-tag.ink-red .hdr-cn { background: var(--ink-red); color: #fff; }
+
+  @media print {
+    .price-tag.ink-red .tag-price,
+    .price-tag.ink-red .hero-price,
+    .price-tag.ink-red .dual-price-val,
+    .price-tag.ink-red .tag-price-large,
+    .price-tag.ink-red .tag-large-box-price {
+      color: var(--ink-red) !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .tag-header .hdr-cn { background: #fff !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .price-tag.ink-red .tag-header .hdr-cn { background: var(--ink-red) !important; color: #fff !important; }
+  }
+
   .warn-banner { background: var(--r); color: #fff; font-weight: 700; font-size: 14px; padding: 10px 20px; text-align: center; }
 
   @media print {
@@ -345,15 +412,17 @@ function heroScale(s) {
 /* renderHeaderHTML — พอร์ตมาจาก src/components/PriceTag.tsx renderHeader() ตรงตัว */
 function renderHeaderHTML(item, config) {
   var loc = String(item.Loc || '').trim().slice(0, 5);
+  var cn = String(config.headerCN || '').trim();
+  var cnHTML = cn ? '<span class="hdr-cn">' + escapeHTML(cn) + '</span>' : '';
   if (!loc) {
-    return '<div class="tag-header">' + escapeHTML(config.header || ' ') + '</div>';
+    return '<div class="tag-header">' + escapeHTML(config.header || ' ') + cnHTML + '</div>';
   }
   var isLargeHdr = item.TagMode === 'large';
   var tagWidth = isLargeHdr ? config.largeW : config.w;
   if (tagWidth >= 4.0) {
     return '<div class="tag-header hs">' +
       '<span class="loc-chip">' + escapeHTML(loc) + '</span>' +
-      '<span class="hs-name">' + escapeHTML(config.header || ' ') + '</span>' +
+      '<span class="hs-name">' + escapeHTML(config.header || ' ') + cnHTML + '</span>' +
       '<span class="loc-chip" style="visibility:hidden">' + escapeHTML(loc) + '</span>' +
     '</div>';
   }
@@ -362,6 +431,15 @@ function renderHeaderHTML(item, config) {
   var row = locParts[1];
   var label = row ? ('ชั้น ' + floor + ' · แถว ' + row) : ('ชั้น ' + floor);
   return '<div class="tag-header hl">' + escapeHTML(label) + '</div>';
+}
+
+/* inkClasses — พอร์ตมาจาก src/components/PriceTag.tsx ตรงตัว */
+function inkClasses(config) {
+  var c = '';
+  if (config.priceFont) c += ' brush-price';
+  if (config.priceInk === 'red') c += ' ink-red';
+  if (config.inkTilt) c += ' ink-tilt';
+  return c;
 }
 
 /* applyCSSVars — ยกมาจาก src/lib/cssVars.ts ตรงตัว */
@@ -382,6 +460,8 @@ function applyCSSVars(config) {
   set('--ribbon-x', config.ribbonX != null ? config.ribbonX : -32, 'px');
   set('--ribbon-y', config.ribbonY != null ? config.ribbonY : 15, 'px');
   set('--f-tag', config.font);
+  set('--f-price', config.priceFont || config.font);
+  set('--ink-red', '#C0141C');
   set('--oos-w', config.oosW || 5.4, 'cm');
   set('--oos-h', config.oosH || 1.4, 'cm');
   set('--oos-sz', config.oosSz || 22, 'px');
@@ -533,7 +613,7 @@ function buildTagHTML(item, config) {
   }
 
   return (
-    '<div class="price-tag ' + tagClass + '">' +
+    '<div class="price-tag ' + tagClass + inkClasses(config) + '">' +
       (safeRibbon ? '<div class="tag-ribbon">' + escapeHTML(safeRibbon) + '</div>' : '') +
       renderHeaderHTML(item, config) +
       middle +

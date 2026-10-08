@@ -1,5 +1,6 @@
 import { useQueueStore } from '../store/queueStore';
 import SliderRow from './SliderRow';
+import { PRICE_FONTS } from '../constants';
 
 export default function SettingsFold() {
   const config = useQueueStore((s) => s.config);
@@ -39,6 +40,50 @@ export default function SettingsFold() {
                 <option value="'Prompt',sans-serif">Prompt</option>
                 <option value="'Sarabun',sans-serif">Sarabun</option>
                 <option value="'Mitr',sans-serif">Mitr</option>
+              </select>
+            </div>
+
+            <div className="cfg-full">
+              <span className="cfg-lbl">ชื่อจีนบนหัวป้าย (เว้นว่าง = ไม่แสดง)</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  className="inp"
+                  style={{ flex: 1, fontFamily: "'Noto Serif SC', serif", fontWeight: 900 }}
+                  value={String(config.headerCN || '')}
+                  onChange={(e) => updateConfig('headerCN', e.target.value)}
+                  placeholder="黄六盛"
+                />
+                <button className="btn btn-preset" onClick={() => updateConfig('headerCN', '黄六盛')}>
+                  ใส่ 黄六盛
+                </button>
+              </div>
+            </div>
+
+            <div className="cfg-full">
+              <span className="cfg-lbl">ฟอนต์ตัวเลขราคา (หมึกพู่กัน)</span>
+              <select
+                className="inp"
+                style={{ fontFamily: config.priceFont || undefined }}
+                value={String(config.priceFont || '')}
+                onChange={(e) => updateConfig('priceFont', e.target.value)}
+              >
+                {PRICE_FONTS.map((f) => (
+                  <option key={f.value} value={f.value}>
+                    {f.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="cfg-full">
+              <span className="cfg-lbl">สีตัวเลขราคา</span>
+              <select
+                className="inp"
+                value={config.priceInk === 'red' ? 'red' : 'black'}
+                onChange={(e) => updateConfig('priceInk', e.target.value)}
+              >
+                <option value="black">ดำ (เดิม)</option>
+                <option value="red">แดงหมึก — ต้องใช้เครื่องพิมพ์สี</option>
               </select>
             </div>
 
@@ -88,6 +133,15 @@ export default function SettingsFold() {
               onChange={(e) => updateConfig('invertBaht', e.target.checked)}
             />
             <label htmlFor="invert-baht">ถมดำพื้นหลังคำว่า "บาท"</label>
+          </div>
+          <div className="cb-wrap">
+            <input
+              type="checkbox"
+              id="ink-tilt"
+              checked={!!config.inkTilt}
+              onChange={(e) => updateConfig('inkTilt', e.target.checked)}
+            />
+            <label htmlFor="ink-tilt">เอียงตัวเลขราคาแบบหมึกพู่กัน</label>
           </div>
         </div>
 

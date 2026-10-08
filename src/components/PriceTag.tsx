@@ -33,8 +33,15 @@ const heroScale = (s: string) => {
 /* หัวป้าย: แสดงรหัสชั้น-แถว (item.Loc) ถ้ามี — ไม่มีค่า = markup เดิมทุกตัวอักษร */
 function renderHeader(item: QueueItem, config: Config) {
   const loc = (item.Loc || '').trim().slice(0, 5);
+  const cn = String(config.headerCN || '').trim();
+  const cnEl = cn ? <span className="hdr-cn">{cn}</span> : null;
   if (!loc) {
-    return <div className="tag-header">{config.header || ' '}</div>;
+    return (
+      <div className="tag-header">
+        {config.header || ' '}
+        {cnEl}
+      </div>
+    );
   }
   const isLarge = item.TagMode === 'large';
   const tagWidth = isLarge ? config.largeW : config.w;
@@ -42,7 +49,10 @@ function renderHeader(item: QueueItem, config: Config) {
     return (
       <div className="tag-header hs">
         <span className="loc-chip">{loc}</span>
-        <span className="hs-name">{config.header || ' '}</span>
+        <span className="hs-name">
+          {config.header || ' '}
+          {cnEl}
+        </span>
         <span className="loc-chip" style={{ visibility: 'hidden' }}>
           {loc}
         </span>
@@ -52,6 +62,15 @@ function renderHeader(item: QueueItem, config: Config) {
   const [floor, row] = loc.split('-');
   const label = row ? `ชั้น ${floor} · แถว ${row}` : `ชั้น ${floor}`;
   return <div className="tag-header hl">{label}</div>;
+}
+
+/* คลาสเสริมของตัวเลขราคา (src/styles/tag-ink.css) — ปิดทั้งหมด = className เดิมทุกตัวอักษร */
+function inkClasses(config: Config) {
+  let c = '';
+  if (config.priceFont) c += ' brush-price';
+  if (config.priceInk === 'red') c += ' ink-red';
+  if (config.inkTilt) c += ' ink-tilt';
+  return c;
 }
 
 export default function PriceTag({ item, config, queueIndex, selected }: Props) {
@@ -331,9 +350,11 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
     );
   }
 
+  const inkCls = inkClasses(config);
+
   return (
     <div
-      className={`price-tag ${tagClass}${selected ? ' selected' : ''}`}
+      className={`price-tag ${tagClass}${inkCls}${selected ? ' selected' : ''}`}
       onClick={(e) => {
         e.stopPropagation();
         selectTag(queueIndex);

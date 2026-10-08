@@ -54,6 +54,10 @@ export interface Config {
   oosSz: number;
   labelOos: string;
   labelStop: string;
+  priceFont: string; // '' = ใช้ฟอนต์เดียวกับตัวหนังสือ
+  priceInk: string; // 'black' | 'red'
+  inkTilt: boolean;
+  headerCN: string; // ชื่อจีนบนหัวป้าย เช่น 黄六盛
   [key: string]: string | number | boolean | undefined;
 }
 
