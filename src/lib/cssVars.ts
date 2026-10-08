@@ -20,6 +20,9 @@ export function applyCSSVars(config: Config) {
   set('--f-price', config.priceFont || config.font);
   set('--ink-red', INK_RED);
   set('--th-accent', THEME_ACCENT);
+  /* ฟอนต์ราคาของธีม: เลือกเอง = ใช้ priceFont, ว่าง = ฟอนต์ของธีม (fallback ใน CSS) */
+  if (config.priceFont) root.setProperty('--f-th-price', String(config.priceFont));
+  else root.removeProperty('--f-th-price');
   set('--oos-w', config.oosW || 5.4, 'cm');
   set('--oos-h', config.oosH || 1.4, 'cm');
   set('--oos-sz', config.oosSz || 22, 'px');

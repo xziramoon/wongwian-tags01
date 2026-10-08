@@ -7,14 +7,16 @@ export default function SettingsFold() {
   const updateConfig = useQueueStore((s) => s.updateConfig);
   const applyPreset = useQueueStore((s) => s.applyPreset);
 
-  /* ใส่ค่าตั้งของธีมครบชุด แต่ไม่ทับช่องที่ผู้ใช้กรอกเองไว้แล้ว (ยกเว้น tagTheme) */
+  /* ใส่ค่าตั้งของธีมครบชุดเฉพาะตอนเปลี่ยนจากแบบเดิม และไม่ทับช่องที่กรอกเองไว้แล้ว (ยกเว้น tagTheme)
+     สลับระหว่างธีมใหม่ด้วยกัน = เปลี่ยนแค่ tagTheme ช่องที่ผู้ใช้ลบทิ้งจะไม่ถูกเติมกลับ */
   const applyTheme = (name: 'korean' | 'ink') => {
     const preset = THEME_PRESETS[name];
+    const fromClassic = !config.tagTheme || config.tagTheme === 'classic';
     Object.entries(preset).forEach(([k, v]) => {
       const key = k as keyof typeof config;
       const cur = String(config[key] ?? '').trim();
       const isDefaultHeader = key === 'header' && (cur === '' || cur === 'ร้านวงเวียน');
-      if (key === 'tagTheme' || cur === '' || isDefaultHeader) updateConfig(key, v as string);
+      if (key === 'tagTheme' || (fromClassic && (cur === '' || isDefaultHeader))) updateConfig(key, v as string);
     });
   };
 
@@ -85,7 +87,7 @@ export default function SettingsFold() {
             </div>
 
             <div>
-              <span className="cfg-lbl">ข้อความขวาบนหัวป้าย</span>
+              <span className="cfg-lbl">ข้อความขวาบนหัวป้าย (เว้นว่าง = ไม่แสดง)</span>
               <input
                 className="inp"
                 value={String(config.headerSub || '')}
@@ -94,7 +96,7 @@ export default function SettingsFold() {
               />
             </div>
             <div>
-              <span className="cfg-lbl">ชื่อสาขา (มุมล่างซ้าย)</span>
+              <span className="cfg-lbl">ชื่อสาขา มุมล่างซ้าย (เว้นว่าง = ไม่แสดง)</span>
               <input
                 className="inp"
                 value={String(config.branchLabel || '')}

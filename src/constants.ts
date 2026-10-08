@@ -102,7 +102,7 @@ export const DEFAULT_CONFIG: Config = {
 
 /* ฟอนต์ตัวเลขราคา — หมึกพู่กันญี่ปุ่น/จีน (โหลดจาก Google Fonts ใน index.html และ TAG_PRINTER.html) */
 export const PRICE_FONTS: { value: string; label: string }[] = [
-  { value: '', label: 'เหมือนตัวหนังสือ (เดิม)' },
+  { value: '', label: 'ค่าเริ่มต้น (ป้ายเดิม = ฟอนต์ตัวหนังสือ · ธีม = ฟอนต์ของธีม)' },
   { value: "'Potta One',cursive", label: 'J1 · Potta One — พู่กันหนา' },
   { value: "'Yuji Boku',serif", label: 'J2 · Yuji Boku — พู่กันแห้ง' },
   { value: "'Yuji Syuku',serif", label: 'J3 · Yuji Syuku — ลายมือพู่กัน' },
@@ -110,6 +110,7 @@ export const PRICE_FONTS: { value: string; label: string }[] = [
   { value: "'Zen Kurenaido',sans-serif", label: 'J5 · Zen Kurenaido — ปากกาพู่กัน' },
   { value: "'Reggae One',cursive", label: 'J6 · Reggae One — หมึกขอบขรุขระ' },
   { value: "'Ma Shan Zheng',cursive", label: 'พู่กันจีน · Ma Shan Zheng' },
+  { value: "'Black Han Sans',sans-serif", label: 'K1 · Black Han Sans — ตัวหนาเกาหลี' },
 ];
 export const INK_RED = '#C0141C';
 export const THEME_ACCENT = '#B3261E';

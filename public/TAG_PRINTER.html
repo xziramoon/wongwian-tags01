@@ -275,10 +275,11 @@
   .th-head { flex:0 0 auto; min-height:18px; display:flex; align-items:center; justify-content:space-between; gap:4px; padding:2px 5px; color:#fff; font-size:calc(var(--meta-sz) + 1px); font-weight:800; line-height:1.3; white-space:nowrap; overflow:hidden; }
   .theme-kr .th-head { background:var(--th-accent); }
   .theme-ink .th-head { background:#000; }
-  .th-brand { display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .th-brand { flex:1 1 auto; display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .th-brand > span:not(.loc-chip):not(.th-cn) { min-width:0; overflow:hidden; text-overflow:ellipsis; }
   .th-cn { font-family:'Noto Serif SC', serif; font-weight:900; letter-spacing:1px; flex-shrink:0; }
   .theme-ink .th-cn { background:var(--ink-red); color:#fff; padding:0 3px; border-radius:2px; }
-  .th-sub { font-weight:600; font-size:calc(var(--meta-sz) - 1px); flex-shrink:0; }
+  .th-sub { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; font-weight:600; font-size:calc(var(--meta-sz) - 1px); }
   .th-head .loc-chip { font-size:calc(var(--meta-sz) + 1px); line-height:1.2; }
 
   .th-body { flex:1 1 auto; min-height:0; position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:2px; padding:3px 6px 2px; overflow:hidden; }
@@ -295,8 +296,8 @@
   .th-pill { background:#000; color:#FFD43B; font-family:'Black Han Sans', sans-serif; font-size:calc(var(--meta-sz) - 1px); line-height:1.4; padding:0 6px; border-radius:999px; letter-spacing:.5px; }
   .th-price-row { display:flex; align-items:flex-end; gap:2px; }
   .th-price { white-space:nowrap; line-height:.85; }
-  .theme-kr .th-price { font-family:'Black Han Sans', sans-serif; color:var(--th-accent); letter-spacing:-1px; text-shadow:2px 2px 0 #FFD43B; }
-  .theme-ink .th-price { display:inline-block; font-family:'Potta One', cursive; color:var(--ink-red); line-height:.95; transform:rotate(-4deg); text-shadow:0 0 1px currentColor; }
+  .theme-kr .th-price { font-family:var(--f-th-price, 'Black Han Sans', sans-serif); color:var(--th-accent); letter-spacing:-1px; text-shadow:2px 2px 0 #FFD43B; }
+  .theme-ink .th-price { display:inline-block; font-family:var(--f-th-price, 'Potta One', cursive); color:var(--ink-red); line-height:.95; transform:rotate(-4deg); text-shadow:0 0 1px currentColor; }
   .th-baht { color:#000; font-weight:800; font-size:calc(var(--meta-sz) + 1px); line-height:1; padding-bottom:2px; flex-shrink:0; }
 
   .th-stamp { width:calc(var(--meta-sz) * 2.1); height:calc(var(--meta-sz) * 2.1); margin-right:calc(var(--meta-sz) * 0.8); box-sizing:border-box; border:2px solid var(--ink-red); border-radius:3px; color:var(--ink-red); font-family:'Noto Serif SC', serif; font-weight:900; font-size:var(--meta-sz); line-height:1; display:grid; grid-template-columns:1fr 1fr; place-items:center; transform:rotate(8deg); opacity:.9; }
@@ -517,6 +518,9 @@ function applyCSSVars(config) {
   set('--f-price', config.priceFont || config.font);
   set('--ink-red', '#C0141C');
   set('--th-accent', '#B3261E');
+  /* ฟอนต์ราคาของธีม: เลือกเอง = ใช้ priceFont, ว่าง = ฟอนต์ของธีม (fallback ใน CSS) */
+  if (config.priceFont) root.setProperty('--f-th-price', String(config.priceFont));
+  else root.removeProperty('--f-th-price');
   set('--oos-w', config.oosW || 5.4, 'cm');
   set('--oos-h', config.oosH || 1.4, 'cm');
   set('--oos-sz', config.oosSz || 22, 'px');
