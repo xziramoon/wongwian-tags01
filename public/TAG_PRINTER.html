@@ -327,9 +327,14 @@
   .veg-badge { display:inline-flex; align-items:center; gap:2px; vertical-align:middle; margin-right:4px; padding:0 4px 0 1px; background:#FFD400; color:#D7141A; border:1.5px solid #D7141A; border-radius:3px; font-weight:900; font-size:.8em; line-height:1.2; letter-spacing:0; white-space:nowrap; }
   .veg-cn { display:inline-block; background:#D7141A; color:#FFD400; font-family:'Noto Serif SC', serif; font-weight:900; border-radius:2px; padding:0 2px; line-height:1.2; }
 
+  /* ธีมเกาหลี/หมึกแดง: ป้าย เจ ตัวใหญ่หน้าตัวเลขราคา — ขนาดอิง --price-sz */
+  .veg-big { display:inline-flex; flex-direction:column; align-self:center; flex-shrink:0; margin-right:calc(var(--price-sz) * 0.1); background:#FFD400; color:#D7141A; border:2px solid #D7141A; border-radius:4px; font-size:calc(var(--price-sz) * 0.3); font-weight:900; line-height:1.1; text-align:center; overflow:hidden; transform:rotate(-6deg); }
+  .veg-big .veg-cn { display:block; border-radius:0; padding:1px 4px; }
+  .veg-big > span:last-child { padding:0 4px 1px; }
+
   @media print {
-    .veg-badge, .veg-cn { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .veg-badge { background:#FFD400 !important; color:#D7141A !important; border-color:#D7141A !important; }
+    .veg-badge, .veg-big, .veg-cn { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .veg-badge, .veg-big { background:#FFD400 !important; color:#D7141A !important; border-color:#D7141A !important; }
     .veg-cn { background:#D7141A !important; color:#FFD400 !important; }
   }
 
@@ -624,7 +629,7 @@ function buildTagHTML(item, config) {
           (tCn ? '<span class="th-cn">' + escapeHTML(tCn) + '</span>' : '') +
         '</div>' + (tSub ? '<div class="th-sub">' + escapeHTML(tSub) + '</div>' : '') + '</div>' +
         '<div class="th-body">' +
-          '<div><div class="th-name" style="font-size:' + nameFontSize + 'px">' + vegHTML + escapeHTML(item.ProductName) + '</div>' +
+          '<div><div class="th-name" style="font-size:' + nameFontSize + 'px">' + escapeHTML(item.ProductName) + '</div>' +
           '<div class="th-sizeline">' + escapeHTML(sizeLine) + '</div></div>' +
           '<div class="th-row"><div class="th-badges">' +
             (hasP2 ? '<span class="th-badge-solid">' + escapeHTML(safeUnit2 || 'ราคาส่ง') + ' ' + p2Disp + ' บ.</span>' : '') +
@@ -634,7 +639,7 @@ function buildTagHTML(item, config) {
           '<div class="th-price-col" style="transform:translateX(' + xOffset + 'px)">' +
             (!isInk && promo ? '<span class="th-pill">특가 · SALE</span>' : '') +
             (isInk && promo ? '<div class="th-stamp"><span>特</span><span>价</span></div>' : '') +
-            '<div class="th-price-row"><span class="th-price" style="font-size:calc(var(--price-sz) * ' + ps + ')">' + pDisp + '</span><span class="th-baht">บาท</span></div>' +
+            '<div class="th-price-row">' + (vegHTML ? '<span class="veg-big" style="font-size:calc(var(--price-sz) * 0.3 * ' + ps + ')"><span class="veg-cn">齋</span><span>เจ</span></span>' : '') + '<span class="th-price" style="font-size:calc(var(--price-sz) * ' + ps + ')">' + pDisp + '</span><span class="th-baht">บาท</span></div>' +
           '</div></div>' +
         '</div>' +
         '<div class="tag-bc-area' + (printed ? ' has-date' : '') + '"><svg class="bc-svg" data-barcode="' + escapeHTML(item.Barcode) + '" data-large="false" data-bch="' + bcHeightStd + '"></svg>' +

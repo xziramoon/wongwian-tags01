@@ -204,7 +204,7 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
         <div className="th-body">
           <div>
             <div className="th-name" style={{ fontSize: `${item.NameFontSize || 13}px` }}>
-              {vegEl}{item.ProductName}
+              {item.ProductName}
             </div>
             <div className="th-sizeline">{sizeLine}</div>
           </div>
@@ -231,6 +231,13 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
                 </div>
               )}
               <div className="th-price-row">
+                {/* ธีมใหม่: ป้าย เจ ตัวใหญ่หน้าตัวเลขราคา (เต็มที่ว่างฝั่งซ้ายของราคา) */}
+                {vegEl && (
+                  <span className="veg-big" style={{ fontSize: `calc(var(--price-sz) * 0.3 * ${ps})` }}>
+                    <span className="veg-cn">齋</span>
+                    <span>เจ</span>
+                  </span>
+                )}
                 <span className="th-price" style={{ fontSize: `calc(var(--price-sz) * ${ps})` }}>
                   {pDisp}
                 </span>
