@@ -348,7 +348,7 @@
 <body>
 
   <div class="toolbar">
-    <div class="tb-title">🖨 TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง</div>
+    <div class="tb-title">🖨 TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง<br /><small style="font-weight:600;opacity:.75">รุ่นธีม · ฟอนต์พู่กัน · ป้ายเจ (2026-10-09)</small></div>
     <div class="tb-status">
       <span class="tb-dot" id="tbDot"></span>
       <span class="tb-status-text" id="tbStatusText">กำลังเชื่อมต่อ...</span>
@@ -824,14 +824,35 @@ function waitForFontsReady() {
   ]);
 }
 
+/* ฟอนต์ที่ป้ายใช้ไม่ได้ถูกโหลดทันทีที่ใส่ HTML — เบราว์เซอร์จะเริ่มโหลดตอนจัดหน้า ซึ่งอาจเกิดหลัง
+ * document.fonts.ready ถูกเช็กไปแล้ว (ready คืนค่าทันทีเพราะยังไม่มีฟอนต์ค้างโหลด) ทำให้พิมพ์ออกมาเป็นฟอนต์สำรอง
+ * ฟอนต์พู่กัน/ธีม/จีน ไม่อยู่ใน warmUpFonts เดิม จึงโดนบ่อยที่สุด — สั่งโหลดฟอนต์ตาม config ให้ครบก่อนพิมพ์ */
+function loadTagFonts(config) {
+  if (!(window.document && document.fonts && document.fonts.load)) return Promise.resolve();
+  var fams = [config.font, config.priceFont, "'Noto Serif SC'"];
+  if (config.tagTheme === 'korean') fams.push("'Black Han Sans'");
+  if (config.tagTheme === 'ink') fams.push("'Potta One'");
+  var sample = '0123456789,. บาทขนาดบรรจุเจ 齋黄六盛特价 특가 SALE';
+  var jobs = [];
+  fams.filter(Boolean).forEach(function (f) {
+    [400, 700, 900].forEach(function (w) {
+      jobs.push(document.fonts.load(w + ' 32px ' + f, sample).catch(function () {}));
+    });
+  });
+  return Promise.race([
+    Promise.all(jobs),
+    new Promise(function (res) { setTimeout(res, 6000); }),
+  ]);
+}
+
 /* kick the webfont downloads off as soon as the stylesheet is parsed, rather than
  * waiting for the first print job to render text and trigger them — gives the very
  * first job (right after a page load/refresh) the best chance the fonts are already
  * cached by the time waitForFontsReady() checks */
 function warmUpFonts() {
   if (!(window.document && document.fonts && document.fonts.load)) return;
-  ['IBM Plex Sans Thai', 'Kanit', 'Mitr', 'Prompt', 'Sarabun'].forEach(function (family) {
-    [400, 700].forEach(function (weight) {
+  ['IBM Plex Sans Thai', 'Kanit', 'Mitr', 'Prompt', 'Sarabun', 'Potta One', 'Black Han Sans', 'Noto Serif SC'].forEach(function (family) {
+    [400, 700, 900].forEach(function (weight) {
       document.fonts.load(weight + ' 16px "' + family + '"').catch(function () {});
     });
   });
@@ -965,7 +986,7 @@ function finalizePrint(items, config) {
   var tagCount = renderAll(items, config);
   document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ';
   beep();
-  Promise.all([waitForFontsReady(), waitForImagesReady()]).then(function () {
+  Promise.all([loadTagFonts(config), waitForImagesReady()]).then(waitForFontsReady).then(function () {
     window.print();
   });
 }
