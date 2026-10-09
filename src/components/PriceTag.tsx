@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import JsBarcode from 'jsbarcode';
 import type { Config, QueueItem } from '../types';
 import { fmtPrice } from '../lib/utils';
+import { isVeg } from '../lib/veg';
 import { useUIStore } from '../store/uiStore';
 
 interface Props {
@@ -133,6 +134,12 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
   const safePack = (item.PackType || '').trim();
   const imgURL = (item.Image || '').trim();
   const printed = (item.Printed || '').trim().slice(0, 8);
+  /* ป้าย เจ หน้าชื่อสินค้า (src/styles/tag-veg.css) */
+  const vegEl = isVeg(item, config) ? (
+    <span className="veg-badge">
+      <span className="veg-cn">齋</span>เจ
+    </span>
+  ) : null;
 
   const bahtEl = invBaht ? (
     <span className="tag-baht-inv">บาท</span>
@@ -197,7 +204,7 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
         <div className="th-body">
           <div>
             <div className="th-name" style={{ fontSize: `${item.NameFontSize || 13}px` }}>
-              {item.ProductName}
+              {vegEl}{item.ProductName}
             </div>
             <div className="th-sizeline">{sizeLine}</div>
           </div>
@@ -249,7 +256,7 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
       <>
         <div className="tag-name-area">
           <div className="tag-name" style={{ fontSize: `${item.NameFontSize || 13}px` }}>
-            {item.ProductName}
+            {vegEl}{item.ProductName}
           </div>
         </div>
         <div className="tag-mid-std">
@@ -289,7 +296,7 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
         <>
           <div className="tag-name-area">
             <div className="tag-name" style={{ fontSize: `${item.NameFontSize || 13}px` }}>
-              {item.ProductName}
+              {vegEl}{item.ProductName}
             </div>
           </div>
           <div className="tag-mid-hero">
@@ -327,7 +334,7 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
         <>
           <div className="tag-name-area">
             <div className="tag-name" style={{ fontSize: `${item.NameFontSize || 13}px` }}>
-              {item.ProductName}
+              {vegEl}{item.ProductName}
             </div>
             {safeSize && (
               <div style={{ fontSize: 9, fontWeight: 600, marginTop: 2, lineHeight: 1.3 }}>
@@ -366,7 +373,7 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
       <>
         <div className="tag-name-area-large">
           <div className="tag-name-large" style={{ fontSize: `calc(${item.NameFontSize || 14}px + 6px)` }}>
-            {item.ProductName}
+            {vegEl}{item.ProductName}
           </div>
         </div>
         <div className="tag-large-body">

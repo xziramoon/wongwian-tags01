@@ -95,6 +95,7 @@ export const DEFAULT_CONFIG: Config = {
   priceInk: 'black',
   inkTilt: false,
   headerCN: '',
+  vegAuto: true,
   tagTheme: 'classic',
   headerSub: '',
   branchLabel: '',

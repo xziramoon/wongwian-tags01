@@ -24,6 +24,7 @@ export interface QueueItem {
   PrintQty: number;
   PriceDiff: string | null;
   Loc: string;
+  Veg: string; // '' = อัตโนมัติจากชื่อ, 'Y' = สินค้าเจ, 'N' = ไม่ใช่เจ
   Printed: string; // วันที่พิมพ์ป้าย เช่น '17/9/69' หรือ ''
   OosEta: string; // เช่น '18 ก.ย.' หรือ ''
   OosReason: OosReason;
@@ -58,6 +59,7 @@ export interface Config {
   priceInk: string; // 'black' | 'red'
   inkTilt: boolean;
   headerCN: string; // ชื่อจีนบนหัวป้าย เช่น 黄六盛
+  vegAuto: boolean; // ติดป้าย เจ อัตโนมัติเมื่อชื่อสินค้ามีคำว่า เจ
   tagTheme: string; // 'classic' | 'korean' | 'ink' — ธีมป้ายปกติ
   headerSub: string; // ข้อความขวาบนหัวป้าย (ธีมใหม่) เช่น ซุปเปอร์มาร์เก็ต
   branchLabel: string; // ชื่อสาขามุมล่างซ้าย (ธีมใหม่) เช่น สาขาวงเวียน

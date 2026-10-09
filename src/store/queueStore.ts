@@ -38,6 +38,7 @@ function normalize(q: Partial<QueueItem>): QueueItem {
     PriceDiff: null,
     Loc: '',
     Printed: '',
+    Veg: '',
     OosEta: '',
     OosReason: 'temp',
     ...q,

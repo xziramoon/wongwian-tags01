@@ -169,6 +169,14 @@ export default function QueueItemCard({ item, index }: Props) {
               />
             </div>
             <div className="q-field">
+              <span className="q-lbl">สินค้าเจ (ธงเหลือง 齋 เจ หน้าชื่อ)</span>
+              <select className="qi" value={item.Veg || ''} onChange={(e) => set('Veg', e.target.value)}>
+                <option value="">อัตโนมัติ — ดูคำว่า "เจ" ในชื่อ</option>
+                <option value="Y">เป็นสินค้าเจ</option>
+                <option value="N">ไม่ใช่สินค้าเจ</option>
+              </select>
+            </div>
+            <div className="q-field">
               <span className="q-lbl">ริบบิ้นมุมป้าย</span>
               <input className="qi" value={item.Ribbon || ''} onChange={(e) => set('Ribbon', e.target.value)} placeholder="เช่น ลดพิเศษ" />
             </div>

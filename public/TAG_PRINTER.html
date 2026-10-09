@@ -317,6 +317,22 @@
     .th-name, .th-baht, .th-badge-line { color:#000 !important; }
   }
 
+  /* ============================================================
+   * ป้าย "เจ" หน้าชื่อสินค้า — ธงเหลืองตัวแดงแบบเทศกาลกินเจ (齋 + เจ)
+   * ขนาดอิงตัวอักษรชื่อสินค้า (em) จึงปรับตามขนาดชื่อเอง
+   * พิมพ์ขาวดำก็ยังอ่านออก: พื้นเหลือง → เทาอ่อน, ตัวแดง → เทาเข้ม
+   * ⚠️ สำเนาตรงตัวจาก src/styles/tag-veg.css — แก้ที่นั่นต้องแก้ที่นี่ด้วย
+   * ============================================================ */
+
+  .veg-badge { display:inline-flex; align-items:center; gap:2px; vertical-align:middle; margin-right:4px; padding:0 4px 0 1px; background:#FFD400; color:#D7141A; border:1.5px solid #D7141A; border-radius:3px; font-weight:900; font-size:.8em; line-height:1.2; letter-spacing:0; white-space:nowrap; }
+  .veg-cn { display:inline-block; background:#D7141A; color:#FFD400; font-family:'Noto Serif SC', serif; font-weight:900; border-radius:2px; padding:0 2px; line-height:1.2; }
+
+  @media print {
+    .veg-badge, .veg-cn { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .veg-badge { background:#FFD400 !important; color:#D7141A !important; border-color:#D7141A !important; }
+    .veg-cn { background:#D7141A !important; color:#FFD400 !important; }
+  }
+
   .warn-banner { background: var(--r); color: #fff; font-weight: 700; font-size: 14px; padding: 10px 20px; text-align: center; }
 
   @media print {
@@ -431,6 +447,7 @@ function normalizeItem(raw) {
     OosReason: String(pick(q, ['OosReason', 'oosReason'], 'temp')),
     Loc: String(pick(q, ['Loc', 'loc'], '')),
     Printed: String(pick(q, ['Printed', 'printed'], '')),
+    Veg: String(pick(q, ['Veg', 'veg'], '')),
   };
 }
 
@@ -486,6 +503,14 @@ function renderHeaderHTML(item, config) {
   var row = locParts[1];
   var label = row ? ('ชั้น ' + floor + ' · แถว ' + row) : ('ชั้น ' + floor);
   return '<div class="tag-header hl">' + escapeHTML(label) + '</div>';
+}
+
+/* isVeg — พอร์ตมาจาก src/lib/veg.ts ตรงตัว */
+var VEG_RE = /เจ(?![\u0E00-\u0E7F])|[齋斋]/;
+function isVeg(item, config) {
+  if (item.Veg === 'Y') return true;
+  if (item.Veg === 'N') return false;
+  return !!config.vegAuto && VEG_RE.test(item.ProductName || '');
 }
 
 /* inkClasses — พอร์ตมาจาก src/components/PriceTag.tsx ตรงตัว */
@@ -557,6 +582,7 @@ function buildTagHTML(item, config) {
   var safePack = (item.PackType || '').trim();
   var imgURL = (item.Image || '').trim();
   var printed = (item.Printed || '').trim().slice(0, 8);
+  var vegHTML = isVeg(item, config) ? '<span class="veg-badge"><span class="veg-cn">齋</span>เจ</span>' : '';
   var nameFontSize = item.NameFontSize || 13;
 
   var bahtHTML = invBaht
@@ -598,7 +624,7 @@ function buildTagHTML(item, config) {
           (tCn ? '<span class="th-cn">' + escapeHTML(tCn) + '</span>' : '') +
         '</div>' + (tSub ? '<div class="th-sub">' + escapeHTML(tSub) + '</div>' : '') + '</div>' +
         '<div class="th-body">' +
-          '<div><div class="th-name" style="font-size:' + nameFontSize + 'px">' + escapeHTML(item.ProductName) + '</div>' +
+          '<div><div class="th-name" style="font-size:' + nameFontSize + 'px">' + vegHTML + escapeHTML(item.ProductName) + '</div>' +
           '<div class="th-sizeline">' + escapeHTML(sizeLine) + '</div></div>' +
           '<div class="th-row"><div class="th-badges">' +
             (hasP2 ? '<span class="th-badge-solid">' + escapeHTML(safeUnit2 || 'ราคาส่ง') + ' ' + p2Disp + ' บ.</span>' : '') +
@@ -623,7 +649,7 @@ function buildTagHTML(item, config) {
 
   if (item.TagMode === 'standard' || !item.TagMode) {
     middle =
-      '<div class="tag-name-area"><div class="tag-name" style="font-size:' + nameFontSize + 'px">' + escapeHTML(item.ProductName) + '</div></div>' +
+      '<div class="tag-name-area"><div class="tag-name" style="font-size:' + nameFontSize + 'px">' + vegHTML + escapeHTML(item.ProductName) + '</div></div>' +
       '<div class="tag-mid-std">' +
         (imgURL ? '<div class="tag-img-side"><img src="' + escapeHTML(imgURL) + '" onerror="this.parentNode.style.display=\'none\'"></div>' : '') +
         '<div class="tag-info">' + sizeHTML + unitHTML + packHTML + dateHTML + '</div>' +
@@ -641,7 +667,7 @@ function buildTagHTML(item, config) {
       var wss = heroScale(p2Disp);
       var hasWs = item.Price2 && String(item.Price2).trim() !== '';
       middle =
-        '<div class="tag-name-area"><div class="tag-name" style="font-size:' + nameFontSize + 'px">' + escapeHTML(item.ProductName) + '</div></div>' +
+        '<div class="tag-name-area"><div class="tag-name" style="font-size:' + nameFontSize + 'px">' + vegHTML + escapeHTML(item.ProductName) + '</div></div>' +
         '<div class="tag-mid-hero">' +
           '<div class="hero-top">' +
             '<div class="hero-meta">' + sizeHTML + unitHTML + packHTML + '</div>' +
@@ -665,7 +691,7 @@ function buildTagHTML(item, config) {
       var s2 = dualScale(p2Disp);
       middle =
         '<div class="tag-name-area">' +
-          '<div class="tag-name" style="font-size:' + nameFontSize + 'px">' + escapeHTML(item.ProductName) + '</div>' +
+          '<div class="tag-name" style="font-size:' + nameFontSize + 'px">' + vegHTML + escapeHTML(item.ProductName) + '</div>' +
           (safeSize ? '<div style="font-size:9px;font-weight:600;margin-top:2px;line-height:1.3">[ ' + escapeHTML(LBL_SIZE) + ' ' + escapeHTML(safeSize) + ' ]</div>' : '') +
         '</div>' +
         '<div class="tag-mid-dual">' +
@@ -685,7 +711,7 @@ function buildTagHTML(item, config) {
     var hasWsLarge = item.Price2 && String(item.Price2).trim() !== '';
     var nameLarge = item.NameFontSize || 14;
     middle =
-      '<div class="tag-name-area-large"><div class="tag-name-large" style="font-size:calc(' + nameLarge + 'px + 6px)">' + escapeHTML(item.ProductName) + '</div></div>' +
+      '<div class="tag-name-area-large"><div class="tag-name-large" style="font-size:calc(' + nameLarge + 'px + 6px)">' + vegHTML + escapeHTML(item.ProductName) + '</div></div>' +
       '<div class="tag-large-body">' +
         '<div class="tag-large-left">' +
           (imgURL ? '<img class="tag-large-img" src="' + escapeHTML(imgURL) + '" onerror="this.style.display=\'none\'">' : '') +

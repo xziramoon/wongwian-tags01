@@ -205,6 +205,15 @@ export default function SettingsFold() {
             />
             <label htmlFor="ink-tilt">เอียงตัวเลขราคาแบบหมึกพู่กัน</label>
           </div>
+          <div className="cb-wrap">
+            <input
+              type="checkbox"
+              id="veg-auto"
+              checked={!!config.vegAuto}
+              onChange={(e) => updateConfig('vegAuto', e.target.checked)}
+            />
+            <label htmlFor="veg-auto">ติดป้าย 齋 เจ อัตโนมัติเมื่อชื่อสินค้ามีคำว่า "เจ"</label>
+          </div>
         </div>
 
         <div className="panel">
