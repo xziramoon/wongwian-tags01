@@ -65,6 +65,16 @@ function renderHeader(item: QueueItem, config: Config) {
   return <div className="tag-header hl">{label}</div>;
 }
 
+/* ขนาดตัวเลขราคาในธีม — ตามแถบเลื่อน PRICE (--price-sz × heroScale) แต่ไม่เกินพื้นที่จริงของแถวราคา
+ * (.th-row เป็น container: cqh = ความสูงที่เหลือใต้ชื่อสินค้า, cqw = ความกว้างป้าย) จึงขยายได้เต็มช่องโดยไม่ล้นขอบ
+ * ⚠️ public/TAG_PRINTER.html มี thPriceFs() สำเนาตรงตัว */
+function thPriceFs(pDisp: string, ps: number, pill: boolean, veg: boolean, stamp: boolean) {
+  const byHeight = `calc((100cqh - ${pill ? 'var(--meta-sz) * 1.7' : '0px'}) / 0.9)`;
+  const widthPct = 66 - (veg ? 14 : 0) - (stamp ? 22 : 0);
+  const byWidth = `calc(${widthPct}cqw / ${(Math.max(pDisp.length, 1) * 0.6).toFixed(2)})`;
+  return `min(calc(var(--price-sz) * ${ps}), ${byHeight}, ${byWidth})`;
+}
+
 /* คลาสเสริมของตัวเลขราคา (src/styles/tag-ink.css) — ปิดทั้งหมด = className เดิมทุกตัวอักษร */
 function inkClasses(config: Config) {
   let c = '';
@@ -230,17 +240,18 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
                   <span>价</span>
                 </div>
               )}
-              <div className="th-price-row">
-                {/* ธีมใหม่: ป้าย เจ ตัวใหญ่หน้าตัวเลขราคา (เต็มที่ว่างฝั่งซ้ายของราคา) */}
+              <div
+                className="th-price-row"
+                style={{ fontSize: thPriceFs(pDisp, ps, theme === 'theme-kr' && promo, !!vegEl, theme === 'theme-ink' && promo) }}
+              >
+                {/* ธีมใหม่: ป้าย เจ ตัวใหญ่หน้าตัวเลขราคา (ขนาดอิงตัวเลขราคา) */}
                 {vegEl && (
-                  <span className="veg-big" style={{ fontSize: `calc(var(--price-sz) * 0.3 * ${ps})` }}>
+                  <span className="veg-big">
                     <span className="veg-cn">齋</span>
                     <span>เจ</span>
                   </span>
                 )}
-                <span className="th-price" style={{ fontSize: `calc(var(--price-sz) * ${ps})` }}>
-                  {pDisp}
-                </span>
+                <span className="th-price">{pDisp}</span>
                 <span className="th-baht">บาท</span>
               </div>
             </div>

@@ -286,7 +286,7 @@
   .th-name { font-weight:700; color:#000; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
     .th-sizeline { font-size:var(--meta-sz); color:#333; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-  .th-row { display:flex; justify-content:space-between; align-items:flex-end; gap:4px; min-width:0; }
+  .th-row { flex:1 1 0; min-height:0; container-type:size; display:flex; justify-content:space-between; align-items:flex-end; gap:4px; min-width:0; }
   .th-badges { display:flex; flex-direction:column; align-items:flex-start; gap:2px; font-size:calc(var(--meta-sz) - 1px); font-weight:700; min-width:0; overflow:hidden; padding-bottom:1px; }
   .th-badge-solid { background:#000; color:#fff; padding:0 4px; border-radius:2px; white-space:nowrap; line-height:1.4; }
   .th-badge-line { border:1px solid #000; color:#000; padding:0 4px; border-radius:2px; white-space:nowrap; line-height:1.3; }
@@ -295,7 +295,7 @@
   .theme-ink .th-price-col { flex-direction:row; align-items:center; gap:3px; }
   .th-pill { background:#000; color:#FFD43B; font-family:'Black Han Sans', sans-serif; font-size:calc(var(--meta-sz) - 1px); line-height:1.4; padding:0 6px; border-radius:999px; letter-spacing:.5px; }
   .th-price-row { display:flex; align-items:flex-end; gap:2px; }
-  .th-price { white-space:nowrap; line-height:.85; }
+  .th-price { font-size:1em; white-space:nowrap; line-height:.85; }
   .theme-kr .th-price { font-family:var(--f-th-price, 'Black Han Sans', sans-serif); color:var(--th-accent); letter-spacing:-1px; text-shadow:2px 2px 0 #FFD43B; }
   .theme-ink .th-price { display:inline-block; font-family:var(--f-th-price, 'Potta One', cursive); color:var(--ink-red); line-height:.95; transform:rotate(-4deg); text-shadow:0 0 1px currentColor; }
   .th-baht { color:#000; font-weight:800; font-size:calc(var(--meta-sz) + 1px); line-height:1; padding-bottom:2px; flex-shrink:0; }
@@ -327,8 +327,8 @@
   .veg-badge { display:inline-flex; align-items:center; gap:2px; vertical-align:middle; margin-right:4px; padding:0 4px 0 1px; background:#FFD400; color:#D7141A; border:1.5px solid #D7141A; border-radius:3px; font-weight:900; font-size:.8em; line-height:1.2; letter-spacing:0; white-space:nowrap; }
   .veg-cn { display:inline-block; background:#D7141A; color:#FFD400; font-family:'Noto Serif SC', serif; font-weight:900; border-radius:2px; padding:0 2px; line-height:1.2; }
 
-  /* ธีมเกาหลี/หมึกแดง: ป้าย เจ ตัวใหญ่หน้าตัวเลขราคา — ขนาดอิง --price-sz */
-  .veg-big { display:inline-flex; flex-direction:column; align-self:center; flex-shrink:0; margin-right:calc(var(--price-sz) * 0.1); background:#FFD400; color:#D7141A; border:2px solid #D7141A; border-radius:4px; font-size:calc(var(--price-sz) * 0.3); font-weight:900; line-height:1.1; text-align:center; overflow:hidden; transform:rotate(-6deg); }
+  /* ธีมเกาหลี/หมึกแดง: ป้าย เจ ตัวใหญ่หน้าตัวเลขราคา — ขนาดอิงตัวเลขราคา (em ของ .th-price-row) */
+  .veg-big { display:inline-flex; flex-direction:column; align-self:center; flex-shrink:0; margin-right:.8em; background:#FFD400; color:#D7141A; border:2px solid #D7141A; border-radius:4px; font-size:.3em; font-weight:900; line-height:1.1; text-align:center; overflow:hidden; transform:rotate(-6deg); }
   .veg-big .veg-cn { display:block; border-radius:0; padding:1px 4px; }
   .veg-big > span:last-child { padding:0 4px 1px; }
 
@@ -518,6 +518,14 @@ function isVeg(item, config) {
   return !!config.vegAuto && VEG_RE.test(item.ProductName || '');
 }
 
+/* thPriceFs — พอร์ตมาจาก src/components/PriceTag.tsx ตรงตัว */
+function thPriceFs(pDisp, ps, pill, veg, stamp) {
+  var byHeight = 'calc((100cqh - ' + (pill ? 'var(--meta-sz) * 1.7' : '0px') + ') / 0.9)';
+  var widthPct = 66 - (veg ? 14 : 0) - (stamp ? 22 : 0);
+  var byWidth = 'calc(' + widthPct + 'cqw / ' + (Math.max(pDisp.length, 1) * 0.6).toFixed(2) + ')';
+  return 'min(calc(var(--price-sz) * ' + ps + '), ' + byHeight + ', ' + byWidth + ')';
+}
+
 /* inkClasses — พอร์ตมาจาก src/components/PriceTag.tsx ตรงตัว */
 function inkClasses(config) {
   var c = '';
@@ -639,7 +647,7 @@ function buildTagHTML(item, config) {
           '<div class="th-price-col" style="transform:translateX(' + xOffset + 'px)">' +
             (!isInk && promo ? '<span class="th-pill">특가 · SALE</span>' : '') +
             (isInk && promo ? '<div class="th-stamp"><span>特</span><span>价</span></div>' : '') +
-            '<div class="th-price-row">' + (vegHTML ? '<span class="veg-big" style="font-size:calc(var(--price-sz) * 0.3 * ' + ps + ')"><span class="veg-cn">齋</span><span>เจ</span></span>' : '') + '<span class="th-price" style="font-size:calc(var(--price-sz) * ' + ps + ')">' + pDisp + '</span><span class="th-baht">บาท</span></div>' +
+            '<div class="th-price-row" style="font-size:' + thPriceFs(pDisp, ps, !isInk && promo, !!vegHTML, isInk && promo) + '">' + (vegHTML ? '<span class="veg-big"><span class="veg-cn">齋</span><span>เจ</span></span>' : '') + '<span class="th-price">' + pDisp + '</span><span class="th-baht">บาท</span></div>' +
           '</div></div>' +
         '</div>' +
         '<div class="tag-bc-area' + (printed ? ' has-date' : '') + '"><svg class="bc-svg" data-barcode="' + escapeHTML(item.Barcode) + '" data-large="false" data-bch="' + bcHeightStd + '"></svg>' +
