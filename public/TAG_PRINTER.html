@@ -387,7 +387,7 @@
 <body>
 
   <div class="toolbar">
-    <div class="tb-title">🖨 TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง<br /><small style="font-weight:600;opacity:.75">รุ่นธีม · ฟอนต์พู่กัน · ป้ายเจ (2026-10-09)</small></div>
+    <div class="tb-title">🖨 TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง<br /><small style="font-weight:600;opacity:.75">รุ่นธีม · ฟอนต์พู่กัน · ป้ายเจ · ขาว-ดำ (<span id="tbBuild"></span>)</small></div>
     <div class="tb-status">
       <span class="tb-dot" id="tbDot"></span>
       <span class="tb-status-text" id="tbStatusText">กำลังเชื่อมต่อ...</span>
@@ -415,6 +415,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
+var PRINTER_BUILD = '2026-10-10b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -1033,7 +1034,9 @@ function finalizePrint(items, config) {
   hideWarning();
 
   var tagCount = renderAll(items, config);
-  document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ';
+  /* บอกว่างานนี้ถูกส่งมาแบบไหน — ถ้าติ๊กขาว-ดำแล้วยังขึ้น "สี" แปลว่าเครื่องที่กดส่งยังไม่ได้ติ๊ก */
+  var modeLbl = (config.printMono ? 'ขาว-ดำ' : 'สี') + (config.tagTheme === 'korean' ? ' · ธีมเกาหลี' : config.tagTheme === 'ink' ? ' · ธีมหมึกแดง' : '');
+  document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ · ' + modeLbl;
   beep();
   Promise.all([loadTagFonts(config), waitForImagesReady()]).then(waitForFontsReady).then(function () {
     window.print();
@@ -1099,6 +1102,22 @@ document.getElementById('tbTestBtn').addEventListener('click', function () {
 });
 
 warmUpFonts();
+
+/* หน้านี้เปิดค้างไว้ทั้งวัน — ถ้ามีรุ่นใหม่ขึ้นเว็บ (PRINTER_BUILD เปลี่ยน) ให้รีโหลดตัวเองตอนว่าง
+ * ไม่งั้นฟีเจอร์ใหม่ (เช่น พิมพ์ขาว-ดำ) จะไม่ทำงานจนกว่าจะมีคนกดรีเฟรชเอง */
+function checkForUpdate() {
+  if (location.protocol === 'file:' || pendingBatch || !window.fetch) return;
+  fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { return r.text(); })
+    .then(function (t) {
+      var m = t.match(/var PRINTER_BUILD = '([^']+)'/);
+      if (m && m[1] !== PRINTER_BUILD) location.reload();
+    })
+    .catch(function () {});
+}
+setInterval(checkForUpdate, 5 * 60 * 1000);
+document.getElementById('tbBuild').textContent = PRINTER_BUILD;
+
 connectAbly();
 </script>
 
