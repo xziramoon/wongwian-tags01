@@ -96,6 +96,7 @@ export const DEFAULT_CONFIG: Config = {
   inkTilt: false,
   headerCN: '',
   vegAuto: true,
+  printMono: false,
   tagTheme: 'classic',
   headerSub: '',
   branchLabel: '',

@@ -214,6 +214,15 @@ export default function SettingsFold() {
             />
             <label htmlFor="veg-auto">ติดป้าย 齋 เจ อัตโนมัติเมื่อชื่อสินค้ามีคำว่า "เจ"</label>
           </div>
+          <div className="cb-wrap">
+            <input
+              type="checkbox"
+              id="print-mono"
+              checked={!!config.printMono}
+              onChange={(e) => updateConfig('printMono', e.target.checked)}
+            />
+            <label htmlFor="print-mono">พิมพ์ขาว-ดำ — เปลี่ยนแดง/เหลืองเป็นโทนดำ (เครื่องพิมพ์ขาวดำ)</label>
+          </div>
         </div>
 
         <div className="panel">

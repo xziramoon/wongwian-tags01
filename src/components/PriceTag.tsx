@@ -79,8 +79,9 @@ function thPriceFs(pDisp: string, ps: number, pill: boolean, veg: boolean, stamp
 function inkClasses(config: Config) {
   let c = '';
   if (config.priceFont) c += ' brush-price';
-  if (config.priceInk === 'red') c += ' ink-red';
+  if (config.priceInk === 'red' && !config.printMono) c += ' ink-red';
   if (config.inkTilt) c += ' ink-tilt';
+  if (config.printMono) c += ' mono'; /* พิมพ์ขาว-ดำ (tag-mono.css) */
   return c;
 }
 
@@ -196,7 +197,7 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
     const ps = heroScale(pDisp);
     return (
       <div
-        className={`price-tag price-tag-normal ${theme}${selected ? ' selected' : ''}`}
+        className={`price-tag price-tag-normal ${theme}${config.printMono ? ' mono' : ''}${selected ? ' selected' : ''}`}
         onClick={(e) => {
           e.stopPropagation();
           selectTag(queueIndex);
