@@ -48,6 +48,8 @@
     --oos-w: 5.4cm;
     --oos-h: 1.4cm;
     --oos-sz: 22px;
+    --fridge-w: 6cm;
+    --fridge-h: 3.5cm;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -188,6 +190,33 @@
 
   @media print {
     .loc-chip, .bc-date { background:#fff !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+
+  /* ============ ป้ายตู้แช่ (TagMode 'fridge') — ชื่อพิมพ์ + 888 เส้นกลวงระบายเมจิกเอง ============
+   * ขาว-ดำล้วน #000/#fff เท่านั้น (เครื่องพิมพ์หมึกดำ) · ทุกขนาดอิงตัวป้าย (cqh/cqw) ปรับ W/H แล้วสเกลตามเอง
+   * สัดส่วนจากแคนวาสดีไซน์ 60×35 มม.: หัว 19% · ชื่อ 10% · ตัวเลข 55%
+   * ⚠️ ต้องตรงกับ wongwian-tags-mobile/src/styles/tag-fridge.css ทุกตัวอักษร */
+  .price-tag-fridge { width: var(--fridge-w); height: var(--fridge-h); border-radius: 1.3mm; container-type: size; color: #000; }
+  .fr-head { flex: 0 0 19cqh; display: flex; align-items: center; justify-content: space-between; gap: 2cqw; padding: 0 3cqw; font-size: 8.5cqh; font-weight: 700; line-height: 1; white-space: nowrap; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .fr-brand { display: flex; align-items: center; gap: 1.5cqw; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .fr-cn { font-family: 'Noto Serif SC', serif; font-weight: 900; flex-shrink: 0; }
+  .fr-snow { width: 1.15em; height: 1.15em; flex-shrink: 0; }
+  .fr-solid { background: #000; color: #fff; }
+  .fr-line { background: #fff; color: #000; border-bottom: 0.8mm double #000; }
+  .fr-line .fr-cn { background: #000; color: #fff; padding: 0.5cqh 1.2cqw; border-radius: 0.4mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .fr-stripe { justify-content: center; background: repeating-linear-gradient(-45deg, #000 0 1.17mm, #fff 1.17mm 2.33mm); border-bottom: 0.5mm solid #000; }
+  .fr-box { background: #fff; color: #000; border: 0.3mm solid #000; padding: 1cqh 2.5cqw; max-width: 100%; overflow: hidden; text-overflow: ellipsis; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .fr-name { flex: 0 0 auto; padding: 1.5cqh 3cqw 0; font-size: 10cqh; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fr-price { flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-end; justify-content: flex-end; gap: 2cqw; padding: 0 3.3cqw 3.5cqh; }
+  .fr-digits { display: block; width: auto; flex-shrink: 0; }
+  .fr-baht { font-size: 9cqh; font-weight: 700; line-height: 1; padding-bottom: 0.5cqh; }
+  
+  @media print {
+    .price-tag-fridge, .fr-name, .fr-baht { color: #000 !important; }
+    .fr-solid { background: #000 !important; color: #fff !important; }
+    .fr-stripe { background: repeating-linear-gradient(-45deg, #000 0 1.17mm, #fff 1.17mm 2.33mm) !important; }
+    .fr-line, .fr-box { background: #fff !important; color: #000 !important; }
+    .fr-line .fr-cn { background: #000 !important; color: #fff !important; }
   }
 
   /* ============ OOS STRIP (แถบสินค้าหมด — ปิดทับช่องราคาของป้ายเดิม) ============ */
@@ -387,7 +416,7 @@
 <body>
 
   <div class="toolbar">
-    <div class="tb-title">🖨 TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง<br /><small style="font-weight:600;opacity:.75">รุ่นธีม · ฟอนต์พู่กัน · ป้ายเจ · ขาว-ดำ (<span id="tbBuild"></span>)</small></div>
+    <div class="tb-title">🖨 TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง<br /><small style="font-weight:600;opacity:.75">รุ่นธีม · ฟอนต์พู่กัน · ป้ายเจ · ขาว-ดำ · ตู้แช่ (<span id="tbBuild"></span>)</small></div>
     <div class="tb-status">
       <span class="tb-dot" id="tbDot"></span>
       <span class="tb-status-text" id="tbStatusText">กำลังเชื่อมต่อ...</span>
@@ -415,7 +444,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-10-10b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-10-23a'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -438,8 +467,9 @@ var DEFAULT_CONFIG = {
   largeW: 11.4, largeH: 6.0, bcHeightLrg: 35,
   oosW: 5.4, oosH: 1.4, oosSz: 22,
   labelOos: 'สินค้าหมด', labelStop: 'เลิกจำหน่าย',
+  fridgeW: 6.0, fridgeH: 3.5, fridgeBar: 'line', fridgeDigits: 3, fridgeFill: false,
 };
-var CONFIG_NUMERIC_KEYS = ['w','h','bcHeight','globalNameSz','priceSz','dualSz','metaSz','ribbonSz','ribbonX','ribbonY','largeW','largeH','bcHeightLrg','oosW','oosH','oosSz'];
+var CONFIG_NUMERIC_KEYS = ['w','h','bcHeight','globalNameSz','priceSz','dualSz','metaSz','ribbonSz','ribbonX','ribbonY','largeW','largeH','bcHeightLrg','oosW','oosH','oosSz','fridgeW','fridgeH','fridgeDigits'];
 
 function normalizeConfig(raw) {
   var merged = Object.assign({}, DEFAULT_CONFIG, raw || {});
@@ -604,12 +634,98 @@ function applyCSSVars(config) {
   set('--oos-w', config.oosW || 5.4, 'cm');
   set('--oos-h', config.oosH || 1.4, 'cm');
   set('--oos-sz', config.oosSz || 22, 'px');
+  set('--fridge-w', config.fridgeW || 6.0, 'cm');
+  set('--fridge-h', config.fridgeH || 3.5, 'cm');
+}
+
+/* ============================================================
+ * ป้ายตู้แช่ (TagMode 'fridge') — ชื่อพิมพ์ + 888 เส้นกลวงให้ระบายเมจิกเอง
+ * ⚠️ ห้ามแก้ตรรกะ — พอร์ตมาจาก wongwian-tags-mobile/src/lib/fridge.ts ตรงตัว
+ * ============================================================ */
+var SEG_W = 66, SEG_H = 116, SEG_T = 13, SEG_V = 46, SEG_GAP = 14;
+var SEG_GEO = {
+  a: [8, 0, SEG_W - 16, SEG_T],
+  b: [SEG_W - SEG_T, 8, SEG_T, SEG_V],
+  c: [SEG_W - SEG_T, SEG_H / 2 + 4, SEG_T, SEG_V],
+  d: [8, SEG_H - SEG_T, SEG_W - 16, SEG_T],
+  e: [0, SEG_H / 2 + 4, SEG_T, SEG_V],
+  f: [0, 8, SEG_T, SEG_V],
+  g: [8, (SEG_H - SEG_T) / 2, SEG_W - 16, SEG_T]
+};
+var SEG_MAP = { '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc',
+  '5': 'afgcd', '6': 'afgedc', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg' };
+var FRIDGE_BARS = ['line', 'solid', 'stripe'];
+
+function fridgeDigitCount(config) {
+  return Number(config.fridgeDigits) === 4 ? 4 : 3;
+}
+function fridgeFillDigits(price, digits) {
+  var n = parseFloat(String(price));
+  if (!Number.isFinite(n) || n <= 0 || !Number.isInteger(n)) return '';
+  var s = String(n);
+  return s.length <= digits ? s : '';
+}
+function fridgeDigitsSVG(digits, value) {
+  var vbW = digits * SEG_W + (digits - 1) * SEG_GAP;
+  var padded = value ? value.padStart(digits, ' ') : '';
+  var rects = '';
+  for (var i = 0; i < digits; i++) {
+    var on = padded ? SEG_MAP[padded[i]] || '' : '';
+    var x0 = i * (SEG_W + SEG_GAP);
+    'abcdefg'.split('').forEach(function (seg) {
+      var g = SEG_GEO[seg];
+      rects +=
+        '<rect x="' + (x0 + g[0]) + '" y="' + g[1] + '" width="' + g[2] + '" height="' + g[3] +
+        '" rx="6" fill="' + (on.indexOf(seg) >= 0 ? '#000' : '#fff') + '" stroke="#000" stroke-width="1.5"/>';
+    });
+  }
+  var ratio = (vbW + 2) / (SEG_H + 2);
+  return (
+    '<svg class="fr-digits" viewBox="-1 -1 ' + (vbW + 2) + ' ' + (SEG_H + 2) + '" style="height:min(55cqh, calc(76cqw / ' +
+    ratio.toFixed(3) + '));aspect-ratio:' + ratio.toFixed(3) + '">' + rects + '</svg>'
+  );
+}
+var SNOWFLAKE =
+  '<svg class="fr-snow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+  '<path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 4l3 2 3-2M9 20l3-2 3 2M3.6 10.6l3.4-.6-1.2-3.2M20.4 13.4l-3.4.6 1.2 3.2M3.6 13.4l3.4.6-1.2 3.2M20.4 10.6l-3.4-.6 1.2-3.2"/></svg>';
+function fridgeHeadHTML(config) {
+  var bar = FRIDGE_BARS.indexOf(String(config.fridgeBar)) >= 0 ? String(config.fridgeBar) : 'line';
+  var name = escapeHTML(String(config.header || '').trim());
+  var cn = escapeHTML(String(config.headerCN || '').trim());
+  if (bar === 'solid') {
+    return (
+      '<div class="fr-head fr-solid"><span class="fr-brand">' + SNOWFLAKE + '<span>' + name + '</span></span>' +
+      (cn ? '<span class="fr-cn">' + cn + '</span>' : '') + '</div>'
+    );
+  }
+  if (bar === 'stripe') {
+    return (
+      '<div class="fr-head fr-stripe"><span class="fr-box">' + name +
+      (cn ? ' <span class="fr-cn">' + cn + '</span>' : '') + '</span></div>'
+    );
+  }
+  return (
+    '<div class="fr-head fr-line"><span class="fr-brand">' + name + '</span>' +
+    (cn ? '<span class="fr-cn">' + cn + '</span>' : '') + '</div>'
+  );
+}
+function buildFridgeHTML(item, config) {
+  var digits = fridgeDigitCount(config);
+  var fill = config.fridgeFill ? fridgeFillDigits(item.Price, digits) : '';
+  return (
+    '<div class="price-tag price-tag-fridge">' +
+    fridgeHeadHTML(config) +
+    '<div class="fr-name">' + escapeHTML(item.ProductName) + '</div>' +
+    '<div class="fr-price">' + fridgeDigitsSVG(digits, fill) + '<span class="fr-baht">บาท</span></div>' +
+    '</div>'
+  );
 }
 
 /* ============================================================
  * render — พอร์ตมาจาก src/components/PriceTag.tsx ตรงตัว (JSX -> template string)
  * ============================================================ */
 function buildTagHTML(item, config) {
+  if (item.TagMode === 'fridge') return buildFridgeHTML(item, config);
   if (item.TagMode === 'oos') {
     var stop = item.OosReason === 'stop';
     var mainLabel = stop ? (config.labelStop || 'เลิกจำหน่าย') : (config.labelOos || 'สินค้าหมด');
@@ -1007,7 +1123,7 @@ function pendingBatchReceivedCount() {
  * means the sender (wongwian-tags-mobile) shipped a tag type this printer predates.
  * ห้ามพิมพ์เงียบ: refuse the whole job and warn instead of silently rendering a
  * blank/wrong tag for the unknown mode. */
-var VALID_TAG_MODES = ['standard', 'dual', 'large', 'oos'];
+var VALID_TAG_MODES = ['standard', 'dual', 'large', 'oos', 'fridge'];
 
 function showWarning(msg) {
   var el = document.getElementById('warnBanner');
@@ -1093,6 +1209,7 @@ document.getElementById('tbTestBtn').addEventListener('click', function () {
     normalizeItem({ Barcode: '8850999123456', ProductName: 'ทดสอบพิมพ์ป้ายราคา (มาตรฐาน)', TagMode: 'standard', Price: '39.00', Size: '500 มล.', PrintQty: 1 }),
     normalizeItem({ Barcode: '8850999654321', ProductName: 'ทดสอบพิมพ์ป้าย (ราคาคู่)', TagMode: 'dual', Price: '25.00', Price2: '220.00', Unit2: 'ยกลัง', PrintQty: 1 }),
     normalizeItem({ Barcode: '8850999111222', ProductName: 'ทดสอบพิมพ์ป้าย (มีรหัสชั้น-แถว)', TagMode: 'standard', Price: '15.00', Size: '1 ชิ้น', Loc: 'A-3', Printed: '17/9/69', PrintQty: 1 }),
+    normalizeItem({ Barcode: '8850999333444', ProductName: 'ทดสอบป้ายตู้แช่ (ระบายราคาเอง)', TagMode: 'fridge', Price: '12', PrintQty: 1 }),
   ];
   var tagCount = renderAll(demoItems, normalizeConfig({}));
   document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ (ทดสอบ)';
