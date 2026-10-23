@@ -195,7 +195,7 @@
   /* ============ ป้ายตู้แช่ (TagMode 'fridge') — ชื่อพิมพ์ + 888 เส้นกลวงระบายเมจิกเอง ============
    * ขาว-ดำล้วน #000/#fff เท่านั้น (เครื่องพิมพ์หมึกดำ) · ทุกขนาดอิงตัวป้าย (cqh/cqw) ปรับ W/H แล้วสเกลตามเอง
    * สัดส่วนจากแคนวาสดีไซน์ 60×35 มม.: หัว 19% · ชื่อ 10% · ตัวเลข 55%
-   * ⚠️ ต้องตรงกับ wongwian-tags-mobile/src/styles/tag-fridge.css ทุกตัวอักษร */
+   * ⚠️ ต้องตรงกับ src/styles/tag-fridge.css และ wongwian-tags-mobile/src/styles/tag-fridge.css ทุกตัวอักษร */
   .price-tag-fridge { width: var(--fridge-w); height: var(--fridge-h); border-radius: 1.3mm; container-type: size; color: #000; }
   .fr-head { flex: 0 0 19cqh; display: flex; align-items: center; justify-content: space-between; gap: 2cqw; padding: 0 3cqw; font-size: 8.5cqh; font-weight: 700; line-height: 1; white-space: nowrap; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .fr-brand { display: flex; align-items: center; gap: 1.5cqw; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -211,6 +211,12 @@
   .fr-digits { display: block; width: auto; flex-shrink: 0; }
   .fr-baht { font-size: 9cqh; font-weight: 700; line-height: 1; padding-bottom: 0.5cqh; }
   
+  /* แผ่นป้ายตู้แช่ — ตารางเต็มแผ่น A4 ขึ้นหน้าใหม่ทุกแผ่น (ค่าตรงกับ FR_SHEET ใน fridge.ts)
+   * แผ่นแรกสุดของงาน: #print-area มี padding 2 มม. อยู่แล้ว เลยเว้นบนแค่ 2.5 มม. */
+  .fr-sheet { flex: 0 0 100%; width: 100%; display: grid; gap: 0.8mm; justify-content: center; align-content: start; padding-top: 4.5mm; break-before: page; page-break-before: always; break-inside: avoid; page-break-inside: avoid; }
+  #print-area > .fr-sheet:first-child { padding-top: 2.5mm; break-before: auto; page-break-before: auto; }
+  @media screen { .fr-sheet { outline: 1px dashed #b9b9cc; outline-offset: 1.5mm; margin: 2mm 0; } }
+  
   @media print {
     .price-tag-fridge, .fr-name, .fr-baht { color: #000 !important; }
     .fr-solid { background: #000 !important; color: #fff !important; }
@@ -223,6 +229,12 @@
   .price-tag-oos { width: var(--oos-w); height: var(--oos-h); background:#000; flex-direction:row; align-items:center; justify-content:center; gap:8px; padding:0 8px; }
   .oos-main { color:#fff; font-size:var(--oos-sz); font-weight:900; letter-spacing:2px; line-height:1; white-space:nowrap; }
   .oos-eta  { color:#fff; font-size:calc(var(--meta-sz) + 1px); font-weight:700; border-left:1px solid #fff; padding-left:8px; white-space:nowrap; }
+  @media print {
+    /* แถบสินค้าหมดพื้นดำ — กฎ .price-tag { background:#fff !important } ด้านบนทำให้พิมพ์ออกมาขาวทั้งแถบ (ตัวหนังสือขาวบนขาว) */
+    .price-tag.price-tag-oos { background:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .oos-main, .oos-eta { color:#fff !important; }
+    .oos-eta { border-left-color:#fff !important; }
+  }
 
   /* ============================================================
    * INK / BRUSH PRICE + ชื่อจีนบนหัวป้าย — ส่วนเสริม (ไม่แตะ tag.css เดิม)
@@ -444,7 +456,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-10-23a'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-10-23b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -709,6 +721,22 @@ function fridgeHeadHTML(config) {
     (cn ? '<span class="fr-cn">' + cn + '</span>' : '') + '</div>'
   );
 }
+var FR_SHEET = { pageW: 210, pageH: 297, padX: 5, padY: 4.5, gap: 0.8 };
+function fridgeSheetLayout(config) {
+  var w = (Number(config.fridgeW) || 6) * 10;
+  var h = (Number(config.fridgeH) || 3.5) * 10;
+  var cols = Math.max(1, Math.floor((FR_SHEET.pageW - 2 * FR_SHEET.padX + FR_SHEET.gap) / (w + FR_SHEET.gap)));
+  var rows = Math.max(1, Math.floor((FR_SHEET.pageH - 2 * FR_SHEET.padY + FR_SHEET.gap) / (h + FR_SHEET.gap)));
+  return { cols: cols, rows: rows, perSheet: cols * rows };
+}
+function chunkSheets(tags, perSheet) {
+  var out = [];
+  for (var i = 0; i < tags.length; i += perSheet) out.push(tags.slice(i, i + perSheet));
+  return out;
+}
+function printRank(mode) {
+  return mode === 'oos' ? 2 : mode === 'fridge' ? 1 : 0;
+}
 function buildFridgeHTML(item, config) {
   var digits = fridgeDigitCount(config);
   var fill = config.fridgeFill ? fridgeFillDigits(item.Price, digits) : '';
@@ -922,11 +950,18 @@ function buildTagHTML(item, config) {
 function renderAll(items, config) {
   applyCSSVars(config);
   var area = document.getElementById('print-area');
-  var parts = [];
+  /* ลำดับบนกระดาษ: ป้ายทั่วไป → แผ่นป้ายตู้แช่ (ตาราง A4 ขึ้นหน้าใหม่ 24 ใบ/แผ่นที่ 60×35 มม.) → แถบสินค้าหมด */
+  var groups = [[], [], []];
   items.forEach(function (item) {
     var qty = Math.max(1, parseInt(item.PrintQty, 10) || 1);
-    for (var k = 0; k < qty; k++) parts.push(buildTagHTML(item, config));
+    for (var k = 0; k < qty; k++) groups[printRank(item.TagMode)].push(buildTagHTML(item, config));
   });
+  var sheet = fridgeSheetLayout(config);
+  var sheetsHTML = chunkSheets(groups[1], sheet.perSheet).map(function (tags) {
+    return '<div class="fr-sheet" style="grid-template-columns:repeat(' + sheet.cols + ', var(--fridge-w))">' + tags.join('') + '</div>';
+  });
+  var parts = groups[0].concat(sheetsHTML, groups[2]);
+  var tagTotal = groups[0].length + groups[1].length + groups[2].length;
   area.innerHTML = parts.length ? parts.join('') : '<div class="empty-msg">รอรับงานพิมพ์จากเครื่องหลัก...</div>';
 
   area.querySelectorAll('.bc-svg').forEach(function (svg) {
@@ -951,7 +986,7 @@ function renderAll(items, config) {
     }
   });
 
-  return parts.length;
+  return tagTotal;
 }
 
 function waitForImagesReady() {
@@ -1152,6 +1187,8 @@ function finalizePrint(items, config) {
   var tagCount = renderAll(items, config);
   /* บอกว่างานนี้ถูกส่งมาแบบไหน — ถ้าติ๊กขาว-ดำแล้วยังขึ้น "สี" แปลว่าเครื่องที่กดส่งยังไม่ได้ติ๊ก */
   var modeLbl = (config.printMono ? 'ขาว-ดำ' : 'สี') + (config.tagTheme === 'korean' ? ' · ธีมเกาหลี' : config.tagTheme === 'ink' ? ' · ธีมหมึกแดง' : '');
+  var frSheets = document.querySelectorAll('#print-area .fr-sheet').length;
+  if (frSheets) modeLbl += ' · ตู้แช่ ' + frSheets + ' แผ่น';
   document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ · ' + modeLbl;
   beep();
   Promise.all([loadTagFonts(config), waitForImagesReady()]).then(waitForFontsReady).then(function () {

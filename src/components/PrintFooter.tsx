@@ -3,6 +3,7 @@ import { useQueueStore } from '../store/queueStore';
 import { useUIStore } from '../store/uiStore';
 import { useHistoryStore } from '../store/historyStore';
 import { printBridge } from '../lib/printBridge';
+import { printRank } from '../lib/fridge';
 
 export default function PrintFooter() {
   const queue = useQueueStore((s) => s.queue);
@@ -28,9 +29,8 @@ export default function PrintFooter() {
     try {
       // แถบสินค้าหมด (oos) สูงแค่ 1.4 ซม. ไม่เท่าป้ายอื่น (4.0 ซม.) — ถ้าปนกลางแถวใน A4
       // จะเกิดช่องว่างฟันหลอ เรียงแถบไปท้ายสุดของงานพิมพ์เสมอ
-      const ordered = [...queue].sort(
-        (a, b) => (a.TagMode === 'oos' ? 1 : 0) - (b.TagMode === 'oos' ? 1 : 0),
-      );
+      // ป้ายตู้แช่จัดเป็นแผ่น A4 ของตัวเอง (ขึ้นหน้าใหม่) ไว้ก่อนแถบสินค้าหมด
+      const ordered = [...queue].sort((a, b) => printRank(a.TagMode) - printRank(b.TagMode));
       await printBridge.publish(config, ordered, (sent, total) => {
         if (total > 1) setProgressLabel(`${sent}/${total}`);
       });

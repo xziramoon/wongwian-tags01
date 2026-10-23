@@ -15,6 +15,7 @@ export default function QueueItemCard({ item, index }: Props) {
   const remove = useQueueStore((s) => s.remove);
   const acceptSinglePriceDiff = useQueueStore((s) => s.acceptSinglePriceDiff);
   const selectedTagIndex = useUIStore((s) => s.selectedTagIndex);
+  const config = useQueueStore((s) => s.config);
 
   const fs = item.NameFontSize || autoFontSize(item.ProductName, item.TagMode);
   const selected = selectedTagIndex === index;
@@ -98,8 +99,19 @@ export default function QueueItemCard({ item, index }: Props) {
           <div className={`mode-btn${item.TagMode === 'oos' ? ' active' : ''}`} onClick={() => set('TagMode', 'oos')}>
             สินค้าหมด
           </div>
+          <div className={`mode-btn${item.TagMode === 'fridge' ? ' active' : ''}`} onClick={() => set('TagMode', 'fridge')}>
+            ❄ ตู้แช่
+          </div>
         </div>
       </div>
+
+      {item.TagMode === 'fridge' && (
+        <span className="fold-hint">
+          {config.fridgeFill
+            ? 'ป้ายตู้แช่ · พิมพ์ราคาจริงเปิดอยู่ — ถมขีดตาม "ราคาขาย" (มีสตางค์/เกินจำนวนหลัก = เว้นว่างให้ระบาย)'
+            : 'ป้ายตู้แช่ไม่พิมพ์ราคา — พิมพ์ 888 เส้นกลวงให้เอาเมจิกระบายเอง (เปิด "พิมพ์ราคาจริง" ได้ในตั้งค่า)'}
+        </span>
+      )}
 
       {item.TagMode === 'oos' && (
         <div>

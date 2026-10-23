@@ -57,6 +57,8 @@ export const SLIDER_DEFS: Record<string, SliderDef> = {
   oosW: { label: 'OOS W (cm)', min: 2, max: 15, step: 0.1, def: 5.4 },
   oosH: { label: 'OOS H (cm)', min: 0.8, max: 4, step: 0.1, def: 1.4 },
   oosSz: { label: 'OOS TEXT', min: 10, max: 40, step: 1, def: 22 },
+  fridgeW: { label: 'ตู้แช่ W (cm)', min: 3, max: 12, step: 0.1, def: 6.0 },
+  fridgeH: { label: 'ตู้แช่ H (cm)', min: 2, max: 8, step: 0.1, def: 3.5 },
 };
 
 export const SIZE_PRESETS: Record<string, Partial<Config>> = {
@@ -100,6 +102,12 @@ export const DEFAULT_CONFIG: Config = {
   tagTheme: 'classic',
   headerSub: '',
   branchLabel: '',
+  /* ป้ายตู้แช่ — 6.0×3.5 ซม. เป็นค่าประมาณจากรูป ต้องวัดรางตู้จริงแล้วปรับในตั้งค่า */
+  fridgeW: SLIDER_DEFS.fridgeW.def,
+  fridgeH: SLIDER_DEFS.fridgeH.def,
+  fridgeBar: 'line',
+  fridgeDigits: 3,
+  fridgeFill: false,
 };
 
 /* ฟอนต์ตัวเลขราคา — หมึกพู่กันญี่ปุ่น/จีน (โหลดจาก Google Fonts ใน index.html และ TAG_PRINTER.html) */

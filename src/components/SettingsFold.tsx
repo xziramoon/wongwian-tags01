@@ -1,11 +1,19 @@
 import { useQueueStore } from '../store/queueStore';
 import SliderRow from './SliderRow';
 import { PRICE_FONTS, THEME_PRESETS } from '../constants';
+import { fridgeSheetLayout } from '../lib/fridge';
+
+const FRIDGE_BAR_OPTS: [string, string][] = [
+  ['line', 'เส้นคู่ (ประหยัดหมึก)'],
+  ['solid', 'แถบดำทึบ'],
+  ['stripe', 'ลายทางเฉียง'],
+];
 
 export default function SettingsFold() {
   const config = useQueueStore((s) => s.config);
   const updateConfig = useQueueStore((s) => s.updateConfig);
   const applyPreset = useQueueStore((s) => s.applyPreset);
+  const sheet = fridgeSheetLayout(config);
 
   /* ใส่ค่าตั้งของธีมครบชุดเฉพาะตอนเปลี่ยนจากแบบเดิม และไม่ทับช่องที่กรอกเองไว้แล้ว (ยกเว้น tagTheme)
      สลับระหว่างธีมใหม่ด้วยกัน = เปลี่ยนแค่ tagTheme ช่องที่ผู้ใช้ลบทิ้งจะไม่ถูกเติมกลับ */
@@ -240,6 +248,50 @@ export default function SettingsFold() {
             <SliderRow configKey="oosW" />
             <SliderRow configKey="oosH" />
             <SliderRow configKey="oosSz" full />
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="p-lbl">ป้ายตู้แช่ (ระบายราคาเอง)</div>
+          <div className="cfg-grid">
+            <div className="cfg-full">
+              <span className="cfg-lbl">แถบหัวป้าย (ขาว-ดำล้วน)</span>
+              <div className="mode-btns">
+                {FRIDGE_BAR_OPTS.map(([v, lbl]) => (
+                  <div
+                    key={v}
+                    className={`mode-btn${(config.fridgeBar || 'line') === v ? ' active' : ''}`}
+                    onClick={() => updateConfig('fridgeBar', v)}
+                  >
+                    {lbl}
+                  </div>
+                ))}
+              </div>
+              <span className="fold-hint">ชื่อร้าน/ชื่อจีนใช้ช่องเดียวกับป้ายปกติ</span>
+            </div>
+            <div className="cfg-full">
+              <span className="cfg-lbl">จำนวนหลักให้ระบาย</span>
+              <div className="mode-btns" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                {[3, 4].map((n) => (
+                  <div
+                    key={n}
+                    className={`mode-btn${(Number(config.fridgeDigits) === 4 ? 4 : 3) === n ? ' active' : ''}`}
+                    onClick={() => updateConfig('fridgeDigits', n)}
+                  >
+                    {n} หลัก ({'8'.repeat(n)})
+                  </div>
+                ))}
+              </div>
+            </div>
+            <label className="cfg-full" style={{ display: 'flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}>
+              <input type="checkbox" checked={!!config.fridgeFill} onChange={(e) => updateConfig('fridgeFill', e.target.checked)} />
+              <span className="cfg-lbl" style={{ margin: 0 }}>พิมพ์ราคาจริง — ถมดำขีดตามราคาให้เลย ไม่ต้องระบาย</span>
+            </label>
+            <SliderRow configKey="fridgeW" />
+            <SliderRow configKey="fridgeH" />
+            <span className="fold-hint cfg-full">
+              A4 ได้ {sheet.perSheet} ใบ/แผ่น ({sheet.cols} × {sheet.rows}) · 6.0 × 3.5 ซม. เป็นค่าประมาณ — วัดรางตู้จริงแล้วปรับให้พอดี
+            </span>
           </div>
         </div>
       </div>
