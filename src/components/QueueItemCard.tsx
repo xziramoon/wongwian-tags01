@@ -44,7 +44,7 @@ export default function QueueItemCard({ item, index }: Props) {
           className="qi name"
           value={item.ProductName}
           onChange={(e) => set('ProductName', e.target.value)}
-          placeholder="ชื่อสินค้า"
+          placeholder={item.TagMode === 'fridge' ? 'ว่าง = ป้ายระบายเปล่า (ไม่มีชื่อ)' : 'ชื่อสินค้า'}
         />
       </div>
 
@@ -109,7 +109,7 @@ export default function QueueItemCard({ item, index }: Props) {
         <span className="fold-hint">
           {config.fridgeFill
             ? 'ป้ายตู้แช่ · พิมพ์ราคาจริงเปิดอยู่ — ถมขีดตาม "ราคาขาย" (มีสตางค์/เกินจำนวนหลัก = เว้นว่างให้ระบาย)'
-            : 'ป้ายตู้แช่ไม่พิมพ์ราคา — พิมพ์ 888 เส้นกลวงให้เอาเมจิกระบายเอง (เปิด "พิมพ์ราคาจริง" ได้ในตั้งค่า)'}
+            : 'ป้ายตู้แช่ไม่พิมพ์ราคา — พิมพ์ 888 ให้ระบายเอง มีจุดนำ/ราคาเล็กบอกว่าต้องระบายเลขอะไร · ลบชื่อสินค้าออก = ป้ายระบายเปล่า'}
         </span>
       )}
 

@@ -108,6 +108,7 @@ export const DEFAULT_CONFIG: Config = {
   fridgeBar: 'line',
   fridgeDigits: 3,
   fridgeFill: false,
+  fridgeGuide: 'full',
 };
 
 /* ฟอนต์ตัวเลขราคา — หมึกพู่กันญี่ปุ่น/จีน (โหลดจาก Google Fonts ใน index.html และ TAG_PRINTER.html) */

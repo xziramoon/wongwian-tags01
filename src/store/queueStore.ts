@@ -84,6 +84,8 @@ interface QueueState {
   clearQueue: () => void;
 
   addFromBarcode: (code: string, exp?: string) => void;
+  /** ป้ายระบายเปล่า (ตู้แช่ ไม่มีชื่อ ไม่มีราคา) — ไม่ต้องสแกนสินค้า */
+  addBlankFridge: (qty: number) => void;
 
   exportQueue: () => void;
   importQueue: (file: File) => void;
@@ -172,6 +174,14 @@ export const useQueueStore = create<QueueState>((set, get) => ({
       return { queue: [] };
     });
     useUIStore.getState().showToast('ล้างรายการเรียบร้อย', 'error');
+  },
+
+  addBlankFridge: (qty) => {
+    const { queue, config } = get();
+    const next = [...queue, normalize({ Barcode: '', ProductName: '', TagMode: 'fridge' as TagMode, Price: '', Unit: '', PrintQty: Math.max(1, qty) })];
+    persist(next, config);
+    set({ queue: next });
+    useUIStore.getState().showToast(`เพิ่มป้ายระบายเปล่า ${qty} ใบ`, 'success');
   },
 
   addFromBarcode: (code, exp = '') => {

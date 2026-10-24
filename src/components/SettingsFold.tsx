@@ -3,6 +3,11 @@ import SliderRow from './SliderRow';
 import { PRICE_FONTS, THEME_PRESETS } from '../constants';
 import { fridgeSheetLayout } from '../lib/fridge';
 
+const FRIDGE_GUIDE_OPTS: [string, string][] = [
+  ['full', 'จุดนำ + ราคาเล็ก'],
+  ['dots', 'จุดนำอย่างเดียว'],
+  ['none', '888 เปล่า'],
+];
 const FRIDGE_BAR_OPTS: [string, string][] = [
   ['line', 'เส้นคู่ (ประหยัดหมึก)'],
   ['solid', 'แถบดำทึบ'],
@@ -282,6 +287,21 @@ export default function SettingsFold() {
                   </div>
                 ))}
               </div>
+            </div>
+            <div className="cfg-full">
+              <span className="cfg-lbl">ตัวช่วยระบาย (บอกพนักงานว่าต้องระบายเลขอะไร)</span>
+              <div className="mode-btns">
+                {FRIDGE_GUIDE_OPTS.map(([v, lbl]) => (
+                  <div
+                    key={v}
+                    className={`mode-btn${(config.fridgeGuide || 'full') === v ? ' active' : ''}`}
+                    onClick={() => updateConfig('fridgeGuide', v)}
+                  >
+                    {lbl}
+                  </div>
+                ))}
+              </div>
+              <span className="fold-hint">จุดดำกลางขีด = ขีดที่ต้องระบาย ระบายทับแล้วจุดหายไปในสีเมจิก · ป้ายระบายเปล่าไม่มีจุดนำ</span>
             </div>
             <label className="cfg-full" style={{ display: 'flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}>
               <input type="checkbox" checked={!!config.fridgeFill} onChange={(e) => updateConfig('fridgeFill', e.target.checked)} />

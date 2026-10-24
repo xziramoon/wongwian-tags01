@@ -206,7 +206,11 @@
   .fr-line .fr-cn { background: #000; color: #fff; padding: 0.5cqh 1.2cqw; border-radius: 0.4mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .fr-stripe { justify-content: center; background: repeating-linear-gradient(-45deg, #000 0 1.17mm, #fff 1.17mm 2.33mm); border-bottom: 0.5mm solid #000; }
   .fr-box { background: #fff; color: #000; border: 0.3mm solid #000; padding: 1cqh 2.5cqw; max-width: 100%; overflow: hidden; text-overflow: ellipsis; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .fr-name { flex: 0 0 auto; padding: 1.5cqh 3cqw 0; font-size: 10cqh; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fr-name { flex: 0 0 auto; display: flex; align-items: baseline; gap: 2cqw; padding: 1.5cqh 3cqw 0; font-size: 10cqh; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; }
+  .fr-nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* ราคาตัวเล็กให้พนักงานรู้ว่าต้องระบายเลขอะไร — ขอบดำบาง ไม่ใช่สีเทา (พิมพ์หมึกดำอย่างเดียว) */
+  .fr-guide { flex: 0 0 auto; font-size: 6.5cqh; font-weight: 700; border: 0.25mm solid #000; border-radius: 0.6mm; padding: 0 1.2cqw; line-height: 1.35; }
+  .fr-blank .fr-price { align-items: center; padding-bottom: 2.5cqh; }
   .fr-price { flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-end; justify-content: flex-end; gap: 2cqw; padding: 0 3.3cqw 3.5cqh; }
   .fr-digits { display: block; width: auto; flex-shrink: 0; }
   .fr-baht { font-size: 9cqh; font-weight: 700; line-height: 1; padding-bottom: 0.5cqh; }
@@ -456,7 +460,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-10-23b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-10-24a'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -479,7 +483,7 @@ var DEFAULT_CONFIG = {
   largeW: 11.4, largeH: 6.0, bcHeightLrg: 35,
   oosW: 5.4, oosH: 1.4, oosSz: 22,
   labelOos: 'สินค้าหมด', labelStop: 'เลิกจำหน่าย',
-  fridgeW: 6.0, fridgeH: 3.5, fridgeBar: 'line', fridgeDigits: 3, fridgeFill: false,
+  fridgeW: 6.0, fridgeH: 3.5, fridgeBar: 'line', fridgeDigits: 3, fridgeFill: false, fridgeGuide: 'full',
 };
 var CONFIG_NUMERIC_KEYS = ['w','h','bcHeight','globalNameSz','priceSz','dualSz','metaSz','ribbonSz','ribbonX','ribbonY','largeW','largeH','bcHeightLrg','oosW','oosH','oosSz','fridgeW','fridgeH','fridgeDigits'];
 
@@ -677,25 +681,45 @@ function fridgeFillDigits(price, digits) {
   var s = String(n);
   return s.length <= digits ? s : '';
 }
-function fridgeDigitsSVG(digits, value) {
+function fridgeDigitsSVG(digits, fill, guide, heightPct) {
+  guide = guide || '';
+  heightPct = heightPct || 55;
   var vbW = digits * SEG_W + (digits - 1) * SEG_GAP;
-  var padded = value ? value.padStart(digits, ' ') : '';
+  var fillPad = fill ? fill.padStart(digits, ' ') : '';
+  var guidePad = guide ? guide.padStart(digits, ' ') : '';
   var rects = '';
+  var dots = '';
   for (var i = 0; i < digits; i++) {
-    var on = padded ? SEG_MAP[padded[i]] || '' : '';
+    var on = fillPad ? SEG_MAP[fillPad[i]] || '' : '';
+    var mark = guidePad ? SEG_MAP[guidePad[i]] || '' : '';
     var x0 = i * (SEG_W + SEG_GAP);
     'abcdefg'.split('').forEach(function (seg) {
       var g = SEG_GEO[seg];
       rects +=
         '<rect x="' + (x0 + g[0]) + '" y="' + g[1] + '" width="' + g[2] + '" height="' + g[3] +
         '" rx="6" fill="' + (on.indexOf(seg) >= 0 ? '#000' : '#fff') + '" stroke="#000" stroke-width="1.5"/>';
+      if (mark.indexOf(seg) >= 0 && on.indexOf(seg) < 0) {
+        dots += '<circle cx="' + (x0 + g[0] + g[2] / 2) + '" cy="' + (g[1] + g[3] / 2) + '" r="3.6" fill="#000"/>';
+      }
     });
   }
   var ratio = (vbW + 2) / (SEG_H + 2);
   return (
-    '<svg class="fr-digits" viewBox="-1 -1 ' + (vbW + 2) + ' ' + (SEG_H + 2) + '" style="height:min(55cqh, calc(76cqw / ' +
-    ratio.toFixed(3) + '));aspect-ratio:' + ratio.toFixed(3) + '">' + rects + '</svg>'
+    '<svg class="fr-digits" viewBox="-1 -1 ' + (vbW + 2) + ' ' + (SEG_H + 2) + '" style="height:min(' + heightPct + 'cqh, calc(76cqw / ' +
+    ratio.toFixed(3) + '));aspect-ratio:' + ratio.toFixed(3) + '">' + rects + dots + '</svg>'
   );
+}
+function isFridgeBlank(item) {
+  return !String(item.ProductName || '').trim();
+}
+function fridgeGuideMode(config) {
+  var g = String(config.fridgeGuide || 'full');
+  return g === 'dots' || g === 'none' ? g : 'full';
+}
+function fridgeGuideText(price) {
+  var n = parseFloat(String(price));
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return Number.isInteger(n) ? 'ราคา ' + n + '.-' : 'ราคา ' + fmtPrice(n);
 }
 var SNOWFLAKE =
   '<svg class="fr-snow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
@@ -739,12 +763,24 @@ function printRank(mode) {
 }
 function buildFridgeHTML(item, config) {
   var digits = fridgeDigitCount(config);
+  if (isFridgeBlank(item)) {
+    return (
+      '<div class="price-tag price-tag-fridge fr-blank">' +
+      fridgeHeadHTML(config) +
+      '<div class="fr-price">' + fridgeDigitsSVG(digits, '', '', 70) + '<span class="fr-baht">บาท</span></div>' +
+      '</div>'
+    );
+  }
   var fill = config.fridgeFill ? fridgeFillDigits(item.Price, digits) : '';
+  var guide = fridgeGuideMode(config);
+  var guideDigits = !config.fridgeFill && guide !== 'none' ? fridgeFillDigits(item.Price, digits) : '';
+  var guideText = !config.fridgeFill && guide === 'full' ? fridgeGuideText(item.Price) : '';
   return (
     '<div class="price-tag price-tag-fridge">' +
     fridgeHeadHTML(config) +
-    '<div class="fr-name">' + escapeHTML(item.ProductName) + '</div>' +
-    '<div class="fr-price">' + fridgeDigitsSVG(digits, fill) + '<span class="fr-baht">บาท</span></div>' +
+    '<div class="fr-name"><span class="fr-nm">' + escapeHTML(item.ProductName) + '</span>' +
+    (guideText ? '<span class="fr-guide">' + guideText + '</span>' : '') + '</div>' +
+    '<div class="fr-price">' + fridgeDigitsSVG(digits, fill, guideDigits) + '<span class="fr-baht">บาท</span></div>' +
     '</div>'
   );
 }
@@ -1247,6 +1283,7 @@ document.getElementById('tbTestBtn').addEventListener('click', function () {
     normalizeItem({ Barcode: '8850999654321', ProductName: 'ทดสอบพิมพ์ป้าย (ราคาคู่)', TagMode: 'dual', Price: '25.00', Price2: '220.00', Unit2: 'ยกลัง', PrintQty: 1 }),
     normalizeItem({ Barcode: '8850999111222', ProductName: 'ทดสอบพิมพ์ป้าย (มีรหัสชั้น-แถว)', TagMode: 'standard', Price: '15.00', Size: '1 ชิ้น', Loc: 'A-3', Printed: '17/9/69', PrintQty: 1 }),
     normalizeItem({ Barcode: '8850999333444', ProductName: 'ทดสอบป้ายตู้แช่ (ระบายราคาเอง)', TagMode: 'fridge', Price: '12', PrintQty: 1 }),
+    normalizeItem({ Barcode: '', ProductName: '', TagMode: 'fridge', Price: '', PrintQty: 1 }),
   ];
   var tagCount = renderAll(demoItems, normalizeConfig({}));
   document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ' + tagCount + ' ใบ (ทดสอบ)';
