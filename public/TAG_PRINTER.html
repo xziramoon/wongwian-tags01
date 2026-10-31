@@ -527,7 +527,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-10-31a'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-10-31b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -1368,7 +1368,7 @@ function pendingBatchReceivedCount() {
  * means the sender (wongwian-tags-mobile) shipped a tag type this printer predates.
  * ห้ามพิมพ์เงียบ: refuse the whole job and warn instead of silently rendering a
  * blank/wrong tag for the unknown mode. */
-var VALID_TAG_MODES = ['standard', 'dual', 'large', 'oos', 'fridge'];
+var VALID_TAG_MODES = ['standard', 'dual', 'large', 'oos', 'fridge', 'hamper'];
 
 function showWarning(msg) {
   var el = document.getElementById('warnBanner');
