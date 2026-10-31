@@ -2,6 +2,7 @@ import { useUIStore } from '../store/uiStore';
 import { useQueueStore } from '../store/queueStore';
 import type { QueueItem } from '../types';
 import { autoFontSize, fmtPrice } from '../lib/utils';
+import { HAMPER_DEFAULTS } from '../lib/hamper';
 
 interface Props {
   item: QueueItem;
@@ -102,6 +103,9 @@ export default function QueueItemCard({ item, index }: Props) {
           <div className={`mode-btn${item.TagMode === 'fridge' ? ' active' : ''}`} onClick={() => set('TagMode', 'fridge')}>
             ❄ ตู้แช่
           </div>
+          <div className={`mode-btn${item.TagMode === 'hamper' ? ' active' : ''}`} onClick={() => set('TagMode', 'hamper')}>
+            🎁 แขวนกระเช้า
+          </div>
         </div>
       </div>
 
@@ -111,6 +115,40 @@ export default function QueueItemCard({ item, index }: Props) {
             ? 'ป้ายตู้แช่ · พิมพ์ราคาจริงเปิดอยู่ — ถมขีดตาม "ราคาขาย" (มีสตางค์/เกินจำนวนหลัก = เว้นว่างให้ระบาย)'
             : 'ป้ายตู้แช่ไม่พิมพ์ราคา — พิมพ์ 888 ให้ระบายเอง มีจุดนำ/ราคาเล็กบอกว่าต้องระบายเลขอะไร · ลบชื่อสินค้าออก = ป้ายระบายเปล่า'}
         </span>
+      )}
+
+      {item.TagMode === 'hamper' && (
+        <div>
+          <span className="fold-hint">
+            ป้ายพับ 2 หน้า สีแดง-เหลือง · พับครึ่งตามเส้นประ เจาะรูทะลุ 2 ชั้น ร้อยเชือก · ช่องว่าง = ใช้คำเริ่มต้น · ใส่ - = ซ่อนบรรทัดนั้น
+          </span>
+          <div className="q-grid2">
+            <div className="q-field">
+              <span className="q-lbl">หัวป้าย</span>
+              <input className="qi" value={item.HamperLabel || ''} onChange={(e) => set('HamperLabel', e.target.value)} placeholder={HAMPER_DEFAULTS.label} />
+            </div>
+            <div className="q-field">
+              <span className="q-lbl">ในกระเช้ามี (สั้นๆ)</span>
+              <input className="qi" value={item.HamperNote || ''} onChange={(e) => set('HamperNote', e.target.value)} placeholder="เช่น 12 ขวด · พร้อมถุงหิ้ว" />
+            </div>
+            <div className="q-field">
+              <span className="q-lbl">คำอวยพร (หลังป้าย)</span>
+              <input className="qi" value={item.HamperGreet || ''} onChange={(e) => set('HamperGreet', e.target.value)} placeholder={HAMPER_DEFAULTS.greet} />
+            </div>
+            <div className="q-field">
+              <span className="q-lbl">คำจีน (หลังป้าย)</span>
+              <input className="qi" value={item.HamperGreetCN || ''} onChange={(e) => set('HamperGreetCN', e.target.value)} placeholder={HAMPER_DEFAULTS.greetCN} />
+            </div>
+            <div className="q-field">
+              <span className="q-lbl">ราคาเดิม (ใส่ = ขึ้น ลดพิเศษ)</span>
+              <input className="qi" type="number" step=".01" value={item.OldPrice || ''} onChange={(e) => set('OldPrice', e.target.value)} placeholder="—" />
+            </div>
+            <div className="q-field">
+              <span className="q-lbl">ป้ายมุมแถบราคา</span>
+              <input className="qi" value={item.Ribbon || ''} onChange={(e) => set('Ribbon', e.target.value)} placeholder="ว่าง = ลดพิเศษ (เมื่อมีราคาเดิม)" />
+            </div>
+          </div>
+        </div>
       )}
 
       {item.TagMode === 'oos' && (

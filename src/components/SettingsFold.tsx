@@ -2,6 +2,7 @@ import { useQueueStore } from '../store/queueStore';
 import SliderRow from './SliderRow';
 import { PRICE_FONTS, THEME_PRESETS } from '../constants';
 import { fridgeSheetLayout } from '../lib/fridge';
+import { hamperSheetLayout } from '../lib/hamper';
 
 const FRIDGE_GUIDE_OPTS: [string, string][] = [
   ['full', 'จุดนำ + ราคาเล็ก'],
@@ -19,6 +20,7 @@ export default function SettingsFold() {
   const updateConfig = useQueueStore((s) => s.updateConfig);
   const applyPreset = useQueueStore((s) => s.applyPreset);
   const sheet = fridgeSheetLayout(config);
+  const hpSheet = hamperSheetLayout(config);
 
   /* ใส่ค่าตั้งของธีมครบชุดเฉพาะตอนเปลี่ยนจากแบบเดิม และไม่ทับช่องที่กรอกเองไว้แล้ว (ยกเว้น tagTheme)
      สลับระหว่างธีมใหม่ด้วยกัน = เปลี่ยนแค่ tagTheme ช่องที่ผู้ใช้ลบทิ้งจะไม่ถูกเติมกลับ */
@@ -311,6 +313,17 @@ export default function SettingsFold() {
             <SliderRow configKey="fridgeH" />
             <span className="fold-hint cfg-full">
               A4 ได้ {sheet.perSheet} ใบ/แผ่น ({sheet.cols} × {sheet.rows}) · 6.0 × 3.5 ซม. เป็นค่าประมาณ — วัดรางตู้จริงแล้วปรับให้พอดี
+            </span>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="p-lbl">ป้ายแขวนกระเช้า (พับ 2 หน้า)</div>
+          <div className="cfg-grid">
+            <SliderRow configKey="hamperW" />
+            <SliderRow configKey="hamperH" />
+            <span className="fold-hint cfg-full">
+              A4 ได้ {hpSheet.perSheet} ใบ/แผ่น · แถบยาว {((Number(config.hamperH) || 9.5) * 2).toFixed(1)} ซม. พับครึ่ง · พิมพ์สีแดง-เหลือง (เปิด "พิมพ์ขาว-ดำ" = ดำล้วน) · ชื่อร้าน/ชื่อจีนใช้ช่องเดียวกับป้ายปกติ
             </span>
           </div>
         </div>
