@@ -59,6 +59,8 @@ export const SLIDER_DEFS: Record<string, SliderDef> = {
   oosSz: { label: 'OOS TEXT', min: 10, max: 40, step: 1, def: 22 },
   fridgeW: { label: 'ตู้แช่ W (cm)', min: 3, max: 12, step: 0.1, def: 6.0 },
   fridgeH: { label: 'ตู้แช่ H (cm)', min: 2, max: 8, step: 0.1, def: 3.5 },
+  hamperW: { label: 'กระเช้า กว้าง (cm)', min: 4, max: 10, step: 0.1, def: 6.5 },
+  hamperH: { label: 'กระเช้า สูงต่อหน้า (cm)', min: 6, max: 14, step: 0.1, def: 9.5 },
 };
 
 export const SIZE_PRESETS: Record<string, Partial<Config>> = {
@@ -109,6 +111,9 @@ export const DEFAULT_CONFIG: Config = {
   fridgeDigits: 3,
   fridgeFill: false,
   fridgeGuide: 'full',
+  /* ป้ายแขวนกระเช้า 6.5 × 9.5 ซม. ต่อหน้า (แถบพับครึ่งยาว 19 ซม.) — A4 ได้ 3 ใบ */
+  hamperW: SLIDER_DEFS.hamperW.def,
+  hamperH: SLIDER_DEFS.hamperH.def,
 };
 
 /* ฟอนต์ตัวเลขราคา — หมึกพู่กันญี่ปุ่น/จีน (โหลดจาก Google Fonts ใน index.html และ TAG_PRINTER.html) */

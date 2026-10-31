@@ -4,6 +4,7 @@ import type { Config, QueueItem } from '../types';
 import { fmtPrice } from '../lib/utils';
 import { isVeg } from '../lib/veg';
 import { buildFridgeHTML } from '../lib/fridge';
+import { buildHamperHTML } from '../lib/hamper';
 import { useUIStore } from '../store/uiStore';
 
 interface Props {
@@ -90,6 +91,7 @@ function inkClasses(config: Config) {
 
 export default function PriceTag({ item, config, queueIndex, selected }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const hamperRef = useRef<HTMLDivElement>(null);
   const selectTag = useUIStore((s) => s.selectTag);
 
   const isLarge = item.TagMode === 'large';
@@ -116,6 +118,22 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
     }
   }, [item.Barcode, isLarge, bcHeightStd, bcHeightLrg, isOos]);
 
+  /* ป้ายกระเช้าเป็น HTML string (ชุดเดียวกับ TAG_PRINTER) — วาดบาร์โค้ดลง .bc-svg หลัง render ทุกครั้ง */
+  const hamperHTML = item.TagMode === 'hamper' ? buildHamperHTML(item, config) : '';
+  useEffect(() => {
+    if (!hamperHTML || !hamperRef.current) return;
+    hamperRef.current.querySelectorAll<SVGSVGElement>('.bc-svg').forEach((svg) => {
+      try {
+        JsBarcode(svg, svg.getAttribute('data-barcode') || '', {
+          format: 'CODE128', width: 1.4, height: parseFloat(svg.getAttribute('data-bch') || '18') || 18,
+          displayValue: true, fontSize: 11, font: 'sans-serif', fontOptions: 'bold', textMargin: 1, margin: 1,
+        });
+      } catch {
+        /* invalid barcode value — leave svg empty */
+      }
+    });
+  }, [hamperHTML, selected]);
+
   /* ป้ายตู้แช่ — ใช้ HTML ชุดเดียวกับ TAG_PRINTER (buildFridgeHTML) ที่จอกับที่พิมพ์จึงตรงกันทุกขีด */
   if (item.TagMode === 'fridge') {
     const html = buildFridgeHTML(item, config);
@@ -127,6 +145,20 @@ export default function PriceTag({ item, config, queueIndex, selected }: Props) 
           selectTag(queueIndex);
         }}
         dangerouslySetInnerHTML={{ __html: selected ? html.replace('price-tag-fridge', 'price-tag-fridge selected') : html }}
+      />
+    );
+  }
+
+  if (item.TagMode === 'hamper') {
+    return (
+      <div
+        ref={hamperRef}
+        style={{ display: 'contents' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          selectTag(queueIndex);
+        }}
+        dangerouslySetInnerHTML={{ __html: selected ? hamperHTML.replace('class="hamper-tag', 'class="hamper-tag selected') : hamperHTML }}
       />
     );
   }

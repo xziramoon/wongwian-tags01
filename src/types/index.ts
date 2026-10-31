@@ -1,4 +1,4 @@
-export type TagMode = 'standard' | 'dual' | 'large' | 'oos' | 'fridge';
+export type TagMode = 'standard' | 'dual' | 'large' | 'oos' | 'fridge' | 'hamper';
 export type DualStyle = 'A' | 'B';
 export type OosReason = 'temp' | 'stop'; // temp = หมดชั่วคราว, stop = เลิกจำหน่าย
 
@@ -28,6 +28,11 @@ export interface QueueItem {
   Printed: string; // วันที่พิมพ์ป้าย เช่น '17/9/69' หรือ ''
   OosEta: string; // เช่น '18 ก.ย.' หรือ ''
   OosReason: OosReason;
+  /* ป้ายแขวนกระเช้า (TagMode 'hamper') — ว่าง = ค่าเริ่มต้น, '-' = ซ่อน */
+  HamperLabel: string; // หัวป้าย เช่น กระเช้าของขวัญ
+  HamperNote: string; // สรุปของในกระเช้า เช่น 12 ขวด · พร้อมถุงหิ้ว
+  HamperGreet: string; // คำอวยพรหลังป้าย เช่น สวัสดีปีใหม่
+  HamperGreetCN: string; // คำจีนหลังป้าย เช่น 恭贺新禧
 }
 
 export interface Config {
@@ -70,6 +75,8 @@ export interface Config {
   fridgeDigits: number; // จำนวนหลัก 888 ให้ระบาย: 3 | 4
   fridgeFill: boolean; // ถมดำขีดตามราคาจริงให้เลย (ไม่ต้องระบาย)
   fridgeGuide: string; // ตัวช่วยระบาย 'full' (จุดนำ + ราคาตัวเล็ก) | 'dots' | 'none'
+  hamperW: number; // ป้ายแขวนกระเช้า: กว้างต่อหน้า (cm)
+  hamperH: number; // สูงต่อหน้า (cm) — แถบจริงสูง 2 เท่า (พับครึ่ง)
   [key: string]: string | number | boolean | undefined;
 }
 

@@ -4,6 +4,7 @@ import { useUIStore } from '../store/uiStore';
 import PriceTag from './PriceTag';
 import ScrollTopFab from './ScrollTopFab';
 import { chunkSheets, fridgeSheetLayout, printRank } from '../lib/fridge';
+import { hamperSheetLayout } from '../lib/hamper';
 
 export default function Workspace() {
   const queue = useQueueStore((s) => s.queue);
@@ -18,10 +19,12 @@ export default function Workspace() {
       tags.push({ key: `${index}-${k}`, queueIndex: index });
     }
   });
-  /* ลำดับบนกระดาษเหมือน TAG_PRINTER: ป้ายทั่วไป → แผ่นป้ายตู้แช่ (ตาราง A4 ขึ้นหน้าใหม่) → แถบสินค้าหมด */
+  /* ลำดับบนกระดาษเหมือน TAG_PRINTER: ป้ายทั่วไป → แผ่นป้ายตู้แช่ → แผ่นป้ายกระเช้า (ตาราง A4 ขึ้นหน้าใหม่) → แถบสินค้าหมด */
   const rankOf = (t: { queueIndex: number }) => printRank(queue[t.queueIndex].TagMode);
   const sheet = fridgeSheetLayout(config);
   const fridgeSheets = chunkSheets(tags.filter((t) => rankOf(t) === 1), sheet.perSheet);
+  const hpSheet = hamperSheetLayout(config);
+  const hamperSheets = chunkSheets(tags.filter((t) => rankOf(t) === 2), hpSheet.perSheet);
   const renderTag = ({ key, queueIndex }: { key: string; queueIndex: number }) => (
     <PriceTag
       key={key}
@@ -46,7 +49,12 @@ export default function Workspace() {
                   {s.map(renderTag)}
                 </div>
               ))}
-              {tags.filter((t) => rankOf(t) === 2).map(renderTag)}
+              {hamperSheets.map((s, i) => (
+                <div key={`hp-sheet-${i}`} className="hp-sheet" style={{ gridTemplateColumns: `repeat(${hpSheet.cols}, var(--hamper-w))` }}>
+                  {s.map(renderTag)}
+                </div>
+              ))}
+              {tags.filter((t) => rankOf(t) === 3).map(renderTag)}
             </>
           )}
         </div>
