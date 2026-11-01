@@ -536,11 +536,35 @@
   #flip-sheets { display: none; }
   body.mode-flip #flip-sheets { display: block; }
   body.mode-flip #print-area { display: none; }
-  .fsheet { width: 200mm; height: 286mm; overflow: hidden; display: grid; justify-content: center; align-content: start; break-after: page; page-break-after: always; background: #fff; margin-bottom: 8mm; box-shadow: 0 1px 0 rgba(23,23,37,.04), 0 20px 50px rgba(23,23,37,.14); }
+  .fsheet { position: relative; width: 200mm; height: 286mm; overflow: hidden; break-after: page; page-break-after: always; background: #fff; margin-bottom: 8mm; box-shadow: 0 1px 0 rgba(23,23,37,.04), 0 20px 50px rgba(23,23,37,.14); }
   .fsheet:last-child { break-after: auto; page-break-after: auto; margin-bottom: 0; }
-  .fsheet-tags { grid-template-columns: repeat(2, 90mm); grid-auto-rows: 40mm; }
-  .fsheet-strips { grid-template-columns: repeat(2, 80mm); grid-auto-rows: 31mm; }
-  .fcell { outline: 0.1mm solid #c4c4c4; }
+  .fpiece { position: absolute; outline: 0.1mm solid #c4c4c4; }
+  /* ---------- ป้ายแคบ 45 × 40 (สเปกข้อ 12.1) ---------- */
+  .ftn { width: 45mm; }
+  .ftn .ft-cn { font-size: 3.25mm; padding: 0 1.25mm; }
+  .ftn-head { flex: 0 0 6mm; height: 6mm; }
+  .ftn-th { flex: 1 1 0; min-width: 0; text-align: center; font-size: 3.25mm; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1mm; }
+  .ftn-name { flex: 0 0 11mm; height: 11mm; padding: 1mm 1.75mm; overflow: hidden; }
+  .ftn-nm { font-weight: 800; line-height: 1.15; color: #111; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; text-overflow: ellipsis; }
+  .ftn-sz { font-size: 2.75mm; color: #333; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ftn-price { flex: 1 1 auto; min-height: 0; border-top: 0.75mm solid #111; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+  .ftn-unit { font-size: 3.5mm; font-weight: 800; color: #111; line-height: 1.2; }
+
+  /* แถบป้ายแคบ: ด้านละ 43 × 21 พับแนวบน-ล่าง (กางออก 43 × 42) · ด้านสินค้าหมดพิมพ์กลับหัว 180° */
+  .fsn { position: relative; width: 43mm; height: 42mm; display: flex; flex-direction: column; background: #fff; box-sizing: border-box; flex-shrink: 0; font-family: var(--ft-font, 'Kanit', sans-serif); color: #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .fsn-face { flex: 0 0 21mm; width: 43mm; height: 21mm; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; line-height: 1.1; }
+  .fsn-back { background: var(--ft-red); color: #fff; text-align: center; transform: rotate(180deg); }
+  .fsn-fold { position: absolute; left: 0; right: 0; top: 21mm; border-top: 0.25mm dashed #666; pointer-events: none; }
+
+  /* ---------- ป้ายกลุ่ม n × 45 × 40 (สเปกข้อ 12.2) ---------- */
+  .ftg-boxes { display: flex; flex-wrap: wrap; gap: 1mm; align-content: flex-end; overflow: hidden; }
+  .ftg-box { border: 0.4mm solid #111; padding: 0.4mm 1.5mm; display: flex; flex-direction: column; align-items: center; line-height: 1.15; background: #fff; }
+  .ftg-lb { font-size: 3mm; font-weight: 600; color: #111; white-space: nowrap; }
+  .ftg-code { font-size: 2.75mm; color: #555; letter-spacing: 0.1mm; }
+  .fs-chip { background: #111; color: #fff; font-size: 3mm; font-weight: 600; padding: 0.5mm 2mm; border-radius: 0.6mm; margin-bottom: 0.8mm; line-height: 1.25; white-space: nowrap; }
+
+  /* สติกเกอร์แดง "หมด" 14 × 8 */
+  .fst { width: 14mm; height: 8mm; box-sizing: border-box; background: var(--ft-red); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--ft-font, 'Kanit', sans-serif); font-weight: 800; font-size: 4.5mm; line-height: 1; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   @media print {
     body.mode-flip .fsheet { margin: 0; box-shadow: none; }
   }
@@ -579,7 +603,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-11-01b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-11-01c'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -1379,10 +1403,22 @@ function normalizeFlipSettings(raw) {
 function normalizeFlipItem(raw) {
   var q = raw || {};
   var str = function (k) { return String(q[k] != null ? q[k] : ''); };
+  var variant = q.variant === 'narrow' || q.variant === 'group' ? q.variant : 'full';
+  var g = null;
+  if (variant === 'group' && q.group && typeof q.group === 'object') {
+    var gm = Array.isArray(q.group.members) ? q.group.members : [];
+    g = {
+      id: String(q.group.id || ''), name: String(q.group.name || ''), size: String(q.group.size || ''),
+      corner: String(q.group.corner || ''), chip: String(q.group.chip || 'ทุกกลิ่น'),
+      slots: Math.min(4, Math.max(2, parseInt(q.group.slots, 10) || 3)),
+      members: gm.slice(0, 40).map(function (m) { return { barcode: String((m && m.barcode) || ''), label: String((m && m.label) || '') }; }),
+    };
+  } else if (variant === 'group') variant = 'full';
   return {
     barcode: str('barcode'), name: str('name'), size: str('size'), price: str('price'),
     pack: str('pack'), label: str('label'), corner: str('corner'), footer: str('footer'), lot: str('lot'),
     qty: Math.max(1, parseInt(q.qty, 10) || 1),
+    variant: variant, group: g,
   };
 }
 function flipNum(v) {
@@ -1435,9 +1471,9 @@ function flipFamily(s) { return "'" + s.font + "',sans-serif"; }
 function flipRed(s) { return s.mono ? FLIP_INK : s.theme === 'plain' ? s.red : FLIP_THEME_COLOR[s.theme]; }
 function flipPriceFamily(s) { return s.priceFont || (s.theme === 'plain' ? flipFamily(s) : FLIP_THEME_FONT[s.theme]); }
 function flipPriceWeight(s) { return (s.priceFont || s.theme !== 'plain') ? 400 : 800; }
-function flipWrapAttrs(s, cls) {
+function flipWrapAttrs(s, cls, extraStyle) {
   return 'class="' + cls + ' ft-theme-' + s.theme + (s.mono ? ' flip-mono' : '') + '" style="--ft-red:' + escapeHTML(flipRed(s)) +
-    ';--ft-font:' + escapeHTML(flipFamily(s)) + ';--ft-price-font:' + escapeHTML(flipPriceFamily(s)) + ';--ft-price-weight:' + flipPriceWeight(s) + '"';
+    ';--ft-font:' + escapeHTML(flipFamily(s)) + ';--ft-price-font:' + escapeHTML(flipPriceFamily(s)) + ';--ft-price-weight:' + flipPriceWeight(s) + (extraStyle || '') + '"';
 }
 function flipTagHTML(d, s) {
   var family = flipFamily(s);
@@ -1459,7 +1495,7 @@ function flipFrontHTML(d, s) {
   var price = flipNum(d.price);
   var maxW = s.theme === 'ink' ? 33 : 36; /* ธีมเอียง -4° เผื่อมุม */
   return '<div ' + flipWrapAttrs(s, 'fs-face fs-front') + '>' +
-    '<div class="fs-pw"><div class="fs-price" style="font-size:' + mm2(flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 17.5, 11)) + '">' + escapeHTML(price) + '</div>' +
+    '<div class="fs-pw">' + (d.variant === 'group' && d.group && d.group.chip ? '<div class="fs-chip">' + escapeHTML(d.group.chip) + '</div>' : '') + '<div class="fs-price" style="font-size:' + mm2(flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 17.5, 11)) + '">' + escapeHTML(price) + '</div>' +
     '<div class="fs-unit">' + escapeHTML(s.unit) + '</div></div>' +
     (d.pack ? '<div class="fs-pack" style="font-size:' + mm2(flipFitWidth(d.pack, family, 600, 36, 3, 2)) + '">' + escapeHTML(d.pack) + '</div>' : '') +
     '</div>';
@@ -1488,23 +1524,132 @@ function loadFlipFonts(s) {
   ]);
 }
 
+/* ---------- ป้ายแคบ / ป้ายกลุ่ม / สติกเกอร์ (สเปกข้อ 12) — พอร์ตจาก src/flip/FlipTag.tsx, layout.ts, fit.ts ---------- */
+var FLIP_PAGE_W = 200, FLIP_PAGE_H = 286;
+var FLIP_STICKER = { w: 14, h: 8 };
+
+function flipLast4(b) { return String(b).trim().slice(-4); }
+function flipTagSize(d) {
+  if (d.variant === 'narrow') return { w: 45, h: 40 };
+  if (d.variant === 'group' && d.group) return { w: d.group.slots * 45, h: 40 };
+  return { w: 90, h: 40 };
+}
+function flipStripSize(d) { return d.variant === 'narrow' ? { w: 43, h: 42 } : { w: 80, h: 31 }; }
+
+/* จัดหน้าแบบชั้น: วางตามลำดับซ้าย→ขวา เต็มแถวขึ้นแถวใหม่ เต็มแผ่นขึ้นแผ่นใหม่ (ผสมขนาดในแผ่นเดียวได้) */
+function flipPackPages(pieces) {
+  var pages = [], cur = [], x = 0, y = 0, rowH = 0, EPS = 1e-6;
+  pieces.forEach(function (p) {
+    if (x > 0 && x + p.w > FLIP_PAGE_W + EPS) { y += rowH; x = 0; rowH = 0; }
+    if (y + p.h > FLIP_PAGE_H + EPS && cur.length) { pages.push(cur); cur = []; x = 0; y = 0; rowH = 0; }
+    cur.push({ item: p, x: x, y: y });
+    x += p.w;
+    rowH = Math.max(rowH, p.h);
+  });
+  if (cur.length) pages.push(cur);
+  return pages;
+}
+function flipPageOffset(page) {
+  var right = 0;
+  page.forEach(function (p) { right = Math.max(right, p.x + p.item.w); });
+  return (FLIP_PAGE_W - right) / 2;
+}
+
+function flipFitNarrowName(name, family, hasSize) {
+  var avail = 45 - FLIP.border * 2 - 3.5;
+  var sizeH = hasSize ? 2.75 * 1.15 : 0;
+  var em = flipTextEm(name, family, 800);
+  for (var s = 3.5; s >= 2.75; s -= 0.25) {
+    var lines = Math.ceil((em * s * 1.06) / avail);
+    if (lines <= 2 && lines * s * 1.15 + sizeH <= 9.2) return s;
+  }
+  return 2.75;
+}
+function flipFitGroupName(name, family, slots) {
+  var avail = slots * 45 - FLIP.border * 2 - FLIP.slotW - 5;
+  var em = flipTextEm(name, family, 800);
+  for (var s = 5; s > 3.5; s -= 0.25) {
+    if (Math.ceil((em * s * 1.06) / avail) <= 2) return s;
+  }
+  return 3.5;
+}
+
+function flipNarrowTagHTML(d, s) {
+  var family = flipFamily(s);
+  var price = flipNum(d.price);
+  var maxW = s.theme === 'ink' ? 38 : 41;
+  return '<div ' + flipWrapAttrs(s, 'ft ftn') + '>' +
+    '<div class="ft-head ftn-head"><span class="ft-cn">' + escapeHTML(s.shopCn) + '</span><span class="ftn-th">' + escapeHTML(s.shopTh) + '</span></div>' +
+    '<div class="ftn-name"><div class="ftn-nm" style="font-size:' + mm2(flipFitNarrowName(d.name, family, !!d.size)) + '">' + escapeHTML(d.name) + '</div>' +
+      (d.size ? '<div class="ftn-sz">' + escapeHTML(d.size) + '</div>' : '') + '</div>' +
+    '<div class="ftn-price"><div class="fs-price" style="font-size:' + mm2(flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10)) + '">' + escapeHTML(price) + '</div>' +
+      '<div class="ftn-unit">' + escapeHTML(s.unit) + '</div></div>' +
+    '</div>';
+}
+function flipNarrowStripHTML(d, s) {
+  var family = flipFamily(s);
+  var price = flipNum(d.price);
+  var maxW = s.theme === 'ink' ? 36 : 39;
+  return '<div ' + flipWrapAttrs(s, 'fsn') + '>' +
+    '<div class="fsn-face fsn-front"><div class="fs-price" style="font-size:' + mm2(flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10)) + '">' + escapeHTML(price) + '</div>' +
+      '<div class="ftn-unit">' + escapeHTML(s.unit) + '</div></div>' +
+    '<div class="fsn-face fsn-back"><div class="fs-out" style="font-size:' + mm2(flipFitWidth(s.outText, family, 800, 39, 6.5, 4)) + '">' + escapeHTML(s.outText) + '</div>' +
+      (s.outSub ? '<div class="fs-outsub">' + escapeHTML(s.outSub) + '</div>' : '') + '</div>' +
+    '<div class="fsn-fold"></div></div>';
+}
+function flipGroupTagHTML(d, s) {
+  var g = d.group;
+  var family = flipFamily(s);
+  var boxes = g.members.map(function (m) {
+    return '<div class="ftg-box"><span class="ftg-lb">' + escapeHTML(m.label) + '</span><span class="ftg-code">' + escapeHTML(flipLast4(m.barcode)) + '</span></div>';
+  }).join('');
+  return '<div ' + flipWrapAttrs(s, 'ft ftg', ';width:' + g.slots * 45 + 'mm') + '>' +
+    '<div class="ft-head"><span class="ft-cn">' + escapeHTML(s.shopCn) + '</span><span class="ft-th">' + escapeHTML(s.shopTh) + '</span><span class="ft-corner">' + escapeHTML(d.corner) + '</span></div>' +
+    '<div class="ft-body"><div class="ft-info">' +
+      '<div class="ft-name" style="font-size:' + mm2(flipFitGroupName(d.name, family, g.slots)) + '">' + escapeHTML(d.name) + '</div>' +
+      (d.size ? '<div class="ft-size">' + escapeHTML(d.size) + '</div>' : '') +
+      '<div class="ft-spacer"></div><div class="ftg-boxes">' + boxes + '</div>' +
+    '</div><div class="ft-slot"><div class="ft-slot-box">ช่องแถบราคา</div></div></div></div>';
+}
+function flipStickerHTML(s) { return '<div ' + flipWrapAttrs(s, 'fst') + '>หมด</div>'; }
+function flipTagAnyHTML(d, s) {
+  if (d.variant === 'narrow') return flipNarrowTagHTML(d, s);
+  if (d.variant === 'group' && d.group) return flipGroupTagHTML(d, s);
+  return flipTagHTML(d, s);
+}
+function flipStripAnyHTML(d, s) { return d.variant === 'narrow' ? flipNarrowStripHTML(d, s) : flipStripHTML(d, s); }
+
+function flipPagesHTML(pages, cls, render) {
+  return pages.map(function (page) {
+    var dx = flipPageOffset(page);
+    return '<div class="fsheet ' + cls + '">' + page.map(function (p) {
+      return '<div class="fpiece" style="left:' + (p.x + dx) + 'mm;top:' + p.y + 'mm;width:' + p.item.w + 'mm;height:' + p.item.h + 'mm">' + render(p.item) + '</div>';
+    }).join('') + '</div>';
+  }).join('');
+}
+
 function renderFlip(flip) {
   var s = normalizeFlipSettings(flip.settings);
-  var kind = flip.kind === 'tags' || flip.kind === 'strips' ? flip.kind : 'both';
+  var kind = flip.kind === 'tags' || flip.kind === 'strips' || flip.kind === 'stickers' ? flip.kind : 'both';
   var items = flipSortByLot((Array.isArray(flip.items) ? flip.items : []).map(normalizeFlipItem));
   return loadFlipFonts(s).then(function () {
     var all = [];
     items.forEach(function (d) { for (var k = 0; k < d.qty; k++) all.push(d); });
     var html = '';
-    if (kind !== 'strips') {
-      flipChunk(all, FLIP.tagsPerSheet).forEach(function (page) {
-        html += '<div class="fsheet fsheet-tags">' + page.map(function (d) { return '<div class="fcell">' + flipTagHTML(d, s) + '</div>'; }).join('') + '</div>';
-      });
+    var count = all.length;
+    if (kind === 'tags' || kind === 'both') {
+      html += flipPagesHTML(flipPackPages(all.map(function (d) { var z = flipTagSize(d); return { w: z.w, h: z.h, d: d }; })), 'fsheet-tags',
+        function (p) { return flipTagAnyHTML(p.d, s); });
     }
-    if (kind !== 'tags') {
-      flipChunk(all, FLIP.stripsPerSheet).forEach(function (page) {
-        html += '<div class="fsheet fsheet-strips">' + page.map(function (d) { return '<div class="fcell">' + flipStripHTML(d, s) + '</div>'; }).join('') + '</div>';
-      });
+    if (kind === 'strips' || kind === 'both') {
+      html += flipPagesHTML(flipPackPages(all.map(function (d) { var z = flipStripSize(d); return { w: z.w, h: z.h, d: d }; })), 'fsheet-strips',
+        function (p) { return flipStripAnyHTML(p.d, s); });
+    }
+    if (kind === 'stickers') {
+      count = Math.floor(FLIP_PAGE_W / FLIP_STICKER.w) * Math.floor(FLIP_PAGE_H / FLIP_STICKER.h);
+      var stickers = [];
+      for (var i = 0; i < count; i++) stickers.push({ w: FLIP_STICKER.w, h: FLIP_STICKER.h });
+      html += flipPagesHTML(flipPackPages(stickers), 'fsheet-stickers', function () { return flipStickerHTML(s); });
     }
     var host = document.getElementById('flip-sheets');
     host.innerHTML = html;
@@ -1522,7 +1667,7 @@ function renderFlip(flip) {
         svg.innerHTML = '';
       }
     });
-    return all.length;
+    return count;
   });
 }
 

@@ -11,7 +11,7 @@ const raf = () => new Promise<void>((r) => requestAnimationFrame(() => requestAn
  * แล้วบันทึกประวัติการพิมพ์ (lastPrinted / tagsPrinted) หลัง afterprint */
 export async function printFlip(kind: FlipPrintKind, items: FlipData[]) {
   const toast = useUIStore.getState().showToast;
-  if (!items.length) {
+  if (!items.length && kind !== 'stickers') {
     toast('ยังไม่มีป้ายดำแดงให้พิมพ์', 'error');
     return;
   }
@@ -36,8 +36,8 @@ export async function printFlip(kind: FlipPrintKind, items: FlipData[]) {
     document.body.classList.remove('print-flip');
     document.getElementById(PAGE_STYLE_ID)?.remove();
     const s = useFlipStore.getState();
-    if (kind !== 'tags') s.markStripsPrinted(items);
-    if (kind !== 'strips') s.markTagsPrinted(items);
+    if (kind === 'strips' || kind === 'both') s.markStripsPrinted(items);
+    if (kind === 'tags' || kind === 'both') s.markTagsPrinted(items);
     s.setJob(null);
   };
   window.addEventListener('afterprint', done);
@@ -47,7 +47,7 @@ export async function printFlip(kind: FlipPrintKind, items: FlipData[]) {
 /* ส่งงานป้ายดำแดงไปเครื่องพิมพ์ปลายทาง (TAG_PRINTER.html) — บันทึกประวัติเมื่อส่งสำเร็จ */
 export async function sendFlipRemote(kind: FlipPrintKind, items: FlipData[]) {
   const toast = useUIStore.getState().showToast;
-  if (!items.length) {
+  if (!items.length && kind !== 'stickers') {
     toast('ยังไม่มีป้ายดำแดงให้ส่งพิมพ์', 'error');
     return;
   }
@@ -59,7 +59,7 @@ export async function sendFlipRemote(kind: FlipPrintKind, items: FlipData[]) {
     return;
   }
   const s = useFlipStore.getState();
-  if (kind !== 'tags') s.markStripsPrinted(items);
-  if (kind !== 'strips') s.markTagsPrinted(items);
+  if (kind === 'strips' || kind === 'both') s.markStripsPrinted(items);
+  if (kind === 'tags' || kind === 'both') s.markTagsPrinted(items);
   toast('ส่งป้ายดำแดงไปเครื่องพิมพ์ปลายทางแล้ว ✓', 'success');
 }
