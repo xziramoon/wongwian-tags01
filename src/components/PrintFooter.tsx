@@ -14,8 +14,15 @@ export default function PrintFooter() {
   const [sending, setSending] = useState(false);
   const [progressLabel, setProgressLabel] = useState('');
 
+  // ป้ายดำแดง (แถบพลิก) พิมพ์/ส่งจากเมนูของมันเอง (A4 ขอบ 5 มม. คนละแบบกับป้ายทั่วไป)
+  const stdQueue = queue.filter((i) => i.TagMode !== 'flip');
+
   const handleLocalPrint = () => {
-    if (queue.length) logPrint('local', queue);
+    if (queue.length && !stdQueue.length) {
+      showToast('ในคิวมีแต่ป้ายดำแดง — พิมพ์จากเมนู "ป้ายดำแดง (แถบพลิก)" ด้านบน', 'error');
+      return;
+    }
+    if (stdQueue.length) logPrint('local', stdQueue);
     window.print();
   };
 
@@ -24,18 +31,22 @@ export default function PrintFooter() {
       showToast('ยังไม่มีป้ายในคิว — สแกน/ค้นหาสินค้าเข้ามาก่อน', 'error');
       return;
     }
+    if (!stdQueue.length) {
+      showToast('ในคิวมีแต่ป้ายดำแดง — ใช้ปุ่ม 📡 ในเมนู "ป้ายดำแดง (แถบพลิก)" เพื่อส่งไปเครื่องปลายทาง', 'error');
+      return;
+    }
     setSending(true);
     setProgressLabel('');
     try {
       // แถบสินค้าหมด (oos) สูงแค่ 1.4 ซม. ไม่เท่าป้ายอื่น (4.0 ซม.) — ถ้าปนกลางแถวใน A4
       // จะเกิดช่องว่างฟันหลอ เรียงแถบไปท้ายสุดของงานพิมพ์เสมอ
       // ป้ายตู้แช่จัดเป็นแผ่น A4 ของตัวเอง (ขึ้นหน้าใหม่) ไว้ก่อนแถบสินค้าหมด
-      const ordered = [...queue].sort((a, b) => printRank(a.TagMode) - printRank(b.TagMode));
+      const ordered = [...stdQueue].sort((a, b) => printRank(a.TagMode) - printRank(b.TagMode));
       await printBridge.publish(config, ordered, (sent, total) => {
         if (total > 1) setProgressLabel(`${sent}/${total}`);
       });
       showToast('ส่งพิมพ์ไปเครื่องพิมพ์ปลายทางแล้ว ✓', 'success');
-      logPrint('remote', queue);
+      logPrint('remote', stdQueue);
     } catch (err) {
       const reason =
         err instanceof Error

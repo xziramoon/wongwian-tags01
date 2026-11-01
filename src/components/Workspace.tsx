@@ -2,6 +2,8 @@ import { useRef } from 'react';
 import { useQueueStore } from '../store/queueStore';
 import { useUIStore } from '../store/uiStore';
 import PriceTag from './PriceTag';
+import FlipPreview from '../flip/FlipPreview';
+import FlipSheets from '../flip/FlipSheets';
 import ScrollTopFab from './ScrollTopFab';
 import { chunkSheets, fridgeSheetLayout, printRank } from '../lib/fridge';
 import { hamperSheetLayout } from '../lib/hamper';
@@ -15,6 +17,7 @@ export default function Workspace() {
 
   const tags: { key: string; queueIndex: number }[] = [];
   queue.forEach((item, index) => {
+    if (item.TagMode === 'flip') return; // ป้ายดำแดงวาด/พิมพ์แยก (src/flip)
     for (let k = 0; k < item.PrintQty; k++) {
       tags.push({ key: `${index}-${k}`, queueIndex: index });
     }
@@ -35,9 +38,13 @@ export default function Workspace() {
     />
   );
 
+  const hasFlip = queue.some((i) => i.TagMode === 'flip');
+
   return (
     <>
       <main className="workspace" id="workspace" ref={workspaceRef} onClick={clearSelection}>
+        <div className="ws-stack">
+          {(tags.length > 0 || !hasFlip) && (
         <div id="print-area">
           {tags.length === 0 ? (
             <div className="empty-msg">ยังไม่มีป้ายราคา — สแกนสินค้าเพื่อเริ่ม</div>
@@ -58,6 +65,10 @@ export default function Workspace() {
             </>
           )}
         </div>
+          )}
+          <FlipPreview />
+        </div>
+        <FlipSheets />
       </main>
       <ScrollTopFab targetRef={workspaceRef} variant="workspace" />
     </>

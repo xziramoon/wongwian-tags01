@@ -1,5 +1,8 @@
 import * as Ably from 'ably';
 import type { Config, QueueItem } from '../types';
+import type { FlipPrintKind } from '../flip/store';
+import type { FlipData } from '../flip/data';
+import type { FlipSettings } from '../flip/config';
 import {
   ABLY_API_KEY,
   PRINT_BATCH_MAX_BYTES,
@@ -7,6 +10,13 @@ import {
   PRINT_EVENT_NAME,
   PRINT_PAYLOAD_VERSION,
 } from '../constants';
+
+/* ป้ายดำแดง (แถบพลิก) ส่งเป็นงานแยก ฟิลด์ flip — ตัวรับ TAG_PRINTER.html วาดและพิมพ์ A4 เอง */
+export interface FlipPayload {
+  kind: FlipPrintKind;
+  settings: FlipSettings;
+  items: FlipData[];
+}
 
 export interface PrintPayload {
   v: number;
@@ -16,6 +26,7 @@ export interface PrintPayload {
   batchTotal: number;
   config: Config;
   items: QueueItem[];
+  flip?: FlipPayload;
 }
 
 export type PublishProgress = (sent: number, total: number) => void;
@@ -93,6 +104,22 @@ class PrintBridge {
       await channel.publish(PRINT_EVENT_NAME, payload);
       onProgress?.(i + 1, batchTotal);
     }
+  }
+
+  async publishFlip(config: Config, flip: FlipPayload): Promise<void> {
+    const client = this.getClient();
+    await this.waitConnected(client);
+    const payload: PrintPayload = {
+      v: PRINT_PAYLOAD_VERSION,
+      ts: Date.now(),
+      batchId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      batchIndex: 0,
+      batchTotal: 1,
+      config,
+      items: [],
+      flip,
+    };
+    await client.channels.get(PRINT_TAGS_CHANNEL).publish(PRINT_EVENT_NAME, payload);
   }
 }
 
