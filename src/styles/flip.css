@@ -52,11 +52,10 @@
 
 /* ---------- แผ่น A4 สำหรับพิมพ์ ---------- */
 #flip-sheets { display: none; }
-.fsheet { width: 200mm; height: 286mm; overflow: hidden; display: grid; justify-content: center; align-content: start; break-after: page; page-break-after: always; }
+/* แผ่น A4: ชิ้นวางตำแหน่งเป็น mm จากตัวจัดหน้า (src/flip/layout.ts) — เส้นตัดบางสีเทารอบแต่ละชิ้น */
+.fsheet { position: relative; width: 200mm; height: 286mm; overflow: hidden; break-after: page; page-break-after: always; }
 .fsheet:last-child { break-after: auto; page-break-after: auto; }
-.fsheet-tags { grid-template-columns: repeat(2, 90mm); grid-auto-rows: 40mm; }
-.fsheet-strips { grid-template-columns: repeat(2, 80mm); grid-auto-rows: 31mm; }
-.fcell { outline: 0.1mm solid #c4c4c4; }
+.fpiece { position: absolute; outline: 0.1mm solid #c4c4c4; }
 
 /* ---------- พรีวิวบนจอ (พื้นที่ทำงาน) ---------- */
 .ws-stack { display: flex; flex-direction: column; align-items: center; gap: 28px; width: 100%; }
@@ -86,6 +85,53 @@
 .flip-red { display: flex; gap: 6px; align-items: center; }
 .flip-red input[type='color'] { width: 38px; height: 38px; padding: 0; border: 1px solid var(--ln2); border-radius: 8px; background: none; flex-shrink: 0; cursor: pointer; }
 .flip-reset { margin-left: 6px; border: none; background: none; color: var(--ac-d); cursor: pointer; font-size: 14px; padding: 0 4px; }
+
+/* ---------- ป้ายแคบ 45 × 40 (สเปกข้อ 12.1) ---------- */
+.ftn { width: 45mm; }
+.ftn .ft-cn { font-size: 3.25mm; padding: 0 1.25mm; }
+.ftn-head { flex: 0 0 6mm; height: 6mm; }
+.ftn-th { flex: 1 1 0; min-width: 0; text-align: center; font-size: 3.25mm; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1mm; }
+.ftn-name { flex: 0 0 11mm; height: 11mm; padding: 1mm 1.75mm; overflow: hidden; }
+.ftn-nm { font-weight: 800; line-height: 1.15; color: #111; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; text-overflow: ellipsis; }
+.ftn-sz { font-size: 2.75mm; color: #333; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ftn-price { flex: 1 1 auto; min-height: 0; border-top: 0.75mm solid #111; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+.ftn-unit { font-size: 3.5mm; font-weight: 800; color: #111; line-height: 1.2; }
+
+/* แถบป้ายแคบ: ด้านละ 43 × 21 พับแนวบน-ล่าง (กางออก 43 × 42) · ด้านสินค้าหมดพิมพ์กลับหัว 180° */
+.fsn { position: relative; width: 43mm; height: 42mm; display: flex; flex-direction: column; background: #fff; box-sizing: border-box; flex-shrink: 0; font-family: var(--ft-font, 'Kanit', sans-serif); color: #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.fsn-face { flex: 0 0 21mm; width: 43mm; height: 21mm; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; line-height: 1.1; }
+.fsn-back { background: var(--ft-red); color: #fff; text-align: center; transform: rotate(180deg); }
+.fsn-fold { position: absolute; left: 0; right: 0; top: 21mm; border-top: 0.25mm dashed #666; pointer-events: none; }
+
+/* ---------- ป้ายกลุ่ม n × 45 × 40 (สเปกข้อ 12.2) ---------- */
+.ftg-boxes { display: flex; flex-wrap: wrap; gap: 1mm; align-content: flex-end; overflow: hidden; }
+.ftg-box { border: 0.4mm solid #111; padding: 0.4mm 1.5mm; display: flex; flex-direction: column; align-items: center; line-height: 1.15; background: #fff; }
+.ftg-lb { font-size: 3mm; font-weight: 600; color: #111; white-space: nowrap; }
+.ftg-code { font-size: 2.75mm; color: #555; letter-spacing: 0.1mm; }
+.fs-chip { background: #111; color: #fff; font-size: 3mm; font-weight: 600; padding: 0.5mm 2mm; border-radius: 0.6mm; margin-bottom: 0.8mm; line-height: 1.25; white-space: nowrap; }
+
+/* สติกเกอร์แดง "หมด" 14 × 8 */
+.fst { width: 14mm; height: 8mm; box-sizing: border-box; background: var(--ft-red); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--ft-font, 'Kanit', sans-serif); font-weight: 800; font-size: 4.5mm; line-height: 1; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+/* ---------- ตัวเลือกขนาด / กลุ่มใน sidebar ---------- */
+.flip-variant-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 8px; }
+.flip-hint-box { background: var(--ac-tint); border: 1px solid var(--ac-soft); border-radius: 10px; padding: 8px 10px; font-size: 13px; font-family: var(--f-ui); margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.flip-grp { border-top: 1px solid var(--ln); padding-bottom: 6px; }
+.flip-grp-members { padding: 0 14px 6px; display: flex; flex-direction: column; gap: 6px; }
+.flip-grp-member { display: grid; grid-template-columns: 1fr auto auto auto; gap: 8px; align-items: center; }
+.flip-grp-code { font-size: 12.5px; color: var(--txt2); font-family: var(--f-ui); }
+.flip-grp-price { font-size: 13px; font-weight: 700; font-family: var(--f-ui); min-width: 40px; text-align: right; }
+.flip-grp-price.none { color: var(--r); font-weight: 500; }
+.flip-grp-add { position: relative; }
+.flip-grp-results { display: flex; flex-direction: column; border: 1px solid var(--ln2); border-radius: 10px; background: var(--surface); margin-top: 4px; overflow: hidden; }
+.flip-grp-results button { text-align: left; border: none; background: none; padding: 8px 10px; cursor: pointer; font-family: var(--f-ui); font-size: 13.5px; border-top: 1px solid var(--ln); }
+.flip-grp-results button:first-child { border-top: none; }
+.flip-grp-results button:hover { background: var(--ac-tint); }
+.flip-warn { margin: 6px 14px; padding: 7px 10px; background: var(--r-soft); color: var(--r); border-radius: 8px; font-size: 13px; font-weight: 600; font-family: var(--f-ui); }
+.flip-row-warn { background: var(--r-soft); }
+.flip-row-warn .flip-row-sub { color: var(--r); }
+.flip-warn-ic { color: var(--r); font-size: 16px; width: 18px; text-align: center; flex-shrink: 0; }
+.flip-grp .fold-hint { display: block; padding: 0 14px 4px; }
 
 /* ---------- พิมพ์ ---------- */
 @media print {

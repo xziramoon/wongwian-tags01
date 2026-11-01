@@ -11,6 +11,28 @@ export const TAG = {
   pageMargin: 5,
 };
 
+/* ป้ายแคบ (สเปกข้อ 12.1): 45 × 40 มม. ใบละสินค้า · แถบราคาด้านละ 43 × 21 มม. พับแนวบน-ล่าง (กางออก 43 × 42) */
+export const NARROW = {
+  w: 45,
+  h: 40,
+  headH: 6,
+  nameH: 11,
+  stripW: 43,
+  stripH: 21,
+};
+
+/* สติกเกอร์ "หมด" แปะทับกล่องกลิ่นเมื่อหมดกลิ่นเดียว */
+export const STICKER = { w: 14, h: 8 };
+
+/* ป้ายกลุ่ม (สเปกข้อ 12.2): กว้าง slots × 45 มม. */
+export const GROUP_DEFAULTS = {
+  corner: 'ทุกกลิ่นราคาเดียว',
+  chip: 'ทุกกลิ่น',
+  slots: 3,
+  minSlots: 2, // น้อยกว่านี้ไม่พอใส่ช่องแถบราคา 40 มม. + ข้อมูล
+  maxSlots: 4, // 4 × 45 = 180 มม. — เกินนี้ไม่พอดีหน้า A4
+};
+
 /* พื้นที่ใช้ได้ของ A4 หลังหักขอบ 5 มม. */
 export const SHEET = {
   w: 210 - TAG.pageMargin * 2, // 200
@@ -27,6 +49,7 @@ export const FLIP_KEYS = {
   overrides: 'tagFlip.overrides',
   lastPrinted: 'tagFlip.lastPrinted',
   tagsPrinted: 'tagFlip.tagsPrinted',
+  groups: 'tagFlip.groups',
 };
 
 /* ธีมเดียวกับป้ายปกติของแอป: 'ink' = หมึกแดง, 'korean' = เกาหลี, 'plain' = ดำแดงแบบแรก (ฟอนต์ตัวหนังสือล้วน) */

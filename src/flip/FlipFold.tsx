@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { database } from '../lib/database';
+import { useMemo } from 'react';
 import { fmtPrice } from '../lib/utils';
 import { useQueueStore } from '../store/queueStore';
 import { useUIStore } from '../store/uiStore';
 import { FLIP_FONTS, FLIP_REDS, FLIP_THEMES, type FlipSettings } from './config';
-import { computeNeedTags, computeToday, fromQueueItem, type FlipData } from './data';
-import { FlipStrip, FlipTag } from './FlipTag';
+import { computeNeedTags, computeToday, queueToFlipData, type FlipData } from './data';
+import FlipGroups from './FlipGroups';
+import { useDbVersion } from './useDbVersion';
+import { FlipStripAny, FlipTagAny } from './FlipTag';
 import { printFlip, sendFlipRemote } from './print';
 import { useFlipSettings, useFlipStore } from './store';
 
@@ -20,14 +21,8 @@ const SAMPLE: FlipData = {
   footer: '8850999123456',
   lot: '',
   qty: 1,
+  variant: 'full',
 };
-
-/* ฐานข้อมูลสินค้าโหลด/ซิงค์ใหม่เมื่อไหร่ ให้รายการเทียบราคาคำนวณใหม่ */
-function useDbVersion() {
-  const [v, setV] = useState(0);
-  useEffect(() => database.onChange(() => setV((n) => n + 1)), []);
-  return v;
-}
 
 const SETTING_TEXT: { key: keyof FlipSettings; label: string; full?: boolean }[] = [
   { key: 'shopCn', label: 'ตราจีน (หัวป้าย)' },
@@ -44,6 +39,7 @@ export default function FlipFold() {
   const overrides = useFlipStore((s) => s.overrides);
   const lastPrinted = useFlipStore((s) => s.lastPrinted);
   const tagsPrinted = useFlipStore((s) => s.tagsPrinted);
+  const groups = useFlipStore((s) => s.groups);
   const updateSetting = useFlipStore((s) => s.updateSetting);
   const acknowledge = useFlipStore((s) => s.acknowledge);
   const queue = useQueueStore((s) => s.queue);
@@ -51,27 +47,32 @@ export default function FlipFold() {
   const dbVersion = useDbVersion();
 
   const flipItems = useMemo(() => queue.filter((i) => i.TagMode === 'flip'), [queue]);
+  // dbVersion: ล็อค (Lot) มาจากฐานข้อมูลสินค้า — ต้องคำนวณใหม่เมื่อโหลด/ซิงค์เสร็จ ไม่งั้นพิมพ์ด้วยค่าล็อคเก่า
   const queueData = useMemo(
-    () => flipItems.map((i) => fromQueueItem(i, settings, overrides[i.Barcode])),
-    [flipItems, settings, overrides],
+    () => queueToFlipData(flipItems, settings, overrides, groups),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [flipItems, settings, overrides, groups, dbVersion],
   );
   const preview = queueData[0] ?? { ...SAMPLE, corner: settings.corner };
 
   /* eslint-disable react-hooks/exhaustive-deps */
-  const today = useMemo(() => computeToday(lastPrinted, settings, overrides), [lastPrinted, settings, overrides, dbVersion]);
+  const today = useMemo(() => computeToday(lastPrinted, settings, overrides, groups), [lastPrinted, settings, overrides, groups, dbVersion]);
   const needTags = useMemo(
     () =>
       computeNeedTags(
         tagsPrinted,
         lastPrinted,
-        flipItems.map((i) => i.Barcode),
+        // สมาชิกที่พิมพ์เป็นป้ายกลุ่มไม่ต้องมีตัวป้ายถาวรแยกรายตัว
+        queueData.filter((d) => d.variant !== 'group').map((d) => d.barcode),
         settings,
         overrides,
+        groups,
       ),
-    [tagsPrinted, lastPrinted, flipItems, settings, overrides, dbVersion],
+    [tagsPrinted, lastPrinted, queueData, settings, overrides, groups, dbVersion],
   );
   /* eslint-enable react-hooks/exhaustive-deps */
 
+  const stripRows = today.filter((r) => r.kind !== 'mismatch');
   const printQueue = (kind: 'tags' | 'strips' | 'both', remote = false) => {
     if (!queueData.length) {
       showToast('เลือกแบบป้าย "ดำแดง" ให้สินค้าในคิวก่อน', 'error');
@@ -103,6 +104,14 @@ export default function FlipFold() {
             <button className="btn btn-remote" onClick={() => printQueue('strips', true)}>📡 ส่งแถบ</button>
             <button className="btn btn-remote" onClick={() => printQueue('both', true)}>📡 ส่งทั้งคู่</button>
           </div>
+          <div className="flip-btn-row flip-btn-row2">
+            <button className="btn btn-preset" onClick={() => printFlip('stickers', [])}>
+              ⎙ สติกเกอร์ "หมด" 1 แผ่น
+            </button>
+            <button className="btn btn-remote" onClick={() => sendFlipRemote('stickers', [])}>
+              📡 ส่งสติกเกอร์
+            </button>
+          </div>
           <div className="cb-wrap">
             <input
               type="checkbox"
@@ -113,7 +122,7 @@ export default function FlipFold() {
             <label htmlFor="flip-mono">โหมดขาวดำ (เครื่องพิมพ์หมึกดำ — ไม่มีสีแดง)</label>
           </div>
           <div className="flip-note">
-            A4 · ขอบ 5 มม. · ในหน้าต่างพิมพ์ตั้ง Scale = 100% (ห้าม "Fit to page") ตัวป้ายพิมพ์ได้ 14 ใบ/แผ่น แถบ 18 แถบ/แผ่น
+            A4 · ขอบ 5 มม. · ในหน้าต่างพิมพ์ตั้ง Scale = 100% (ห้าม "Fit to page") ป้ายเต็ม 14 ใบ/แผ่น แถบ 18 · ป้ายแคบ 28 ใบ แถบแคบ 24 · ผสมขนาดในแผ่นเดียวได้ เรียงตามล็อค
           </div>
         </div>
 
@@ -127,14 +136,20 @@ export default function FlipFold() {
             <>
               <div className="flip-list">
                 {today.map((r) => (
-                  <label key={r.data.barcode} className="flip-row">
-                    <input type="checkbox" onChange={() => acknowledge([r])} title="เปลี่ยนแล้ว" />
+                  <label key={`${r.kind}-${r.data.barcode}`} className={`flip-row${r.kind === 'mismatch' ? ' flip-row-warn' : ''}`}>
+                    {r.kind === 'mismatch' ? (
+                      <span className="flip-warn-ic">⚠</span>
+                    ) : (
+                      <input type="checkbox" onChange={() => acknowledge([r])} title="เปลี่ยนแล้ว" />
+                    )}
                     <div className="flip-row-main">
                       <div className="flip-row-name">{r.data.name}</div>
                       <div className="flip-row-sub">
                         {r.data.lot && <b>ล็อค {r.data.lot} · </b>}
                         {r.kind === 'printed' ? 'พิมพ์แล้ว รอเปลี่ยน · ' : ''}
-                        {r.oldPrice ? (
+                        {r.kind === 'mismatch' ? (
+                          <b>ราคาสมาชิกกลุ่มไม่เท่ากัน: {r.warn} — แยกป้ายหรือแก้ราคา</b>
+                        ) : r.oldPrice ? (
                           <>
                             {fmtPrice(r.oldPrice)} → <b>{fmtPrice(r.newPrice)}</b>
                           </>
@@ -150,11 +165,11 @@ export default function FlipFold() {
               <div className="flip-btn-row flip-btn-row2">
                 <button
                   className="btn btn-preset"
-                  onClick={() => printFlip('strips', today.map((r) => r.data))}
+                  onClick={() => printFlip('strips', stripRows.map((r) => r.data))}
                 >
-                  ⎙ พิมพ์แถบทั้งหมด ({today.length})
+                  ⎙ พิมพ์แถบทั้งหมด ({stripRows.length})
                 </button>
-                <button className="btn btn-remote" onClick={() => sendFlipRemote('strips', today.map((r) => r.data))}>
+                <button className="btn btn-remote" onClick={() => sendFlipRemote('strips', stripRows.map((r) => r.data))}>
                   📡 ส่งแถบไปเครื่องปลายทาง
                 </button>
                 <button className="btn btn-preset" onClick={() => acknowledge(today)}>
@@ -195,16 +210,18 @@ export default function FlipFold() {
           )}
         </div>
 
+        <FlipGroups dbVersion={dbVersion} />
+
         <div className="panel">
           <div className="p-lbl">
             ตั้งค่าป้ายดำแดง <span className="fold-hint" style={{ marginLeft: 'auto' }}>พรีวิวสด</span>
           </div>
           <div className="flip-preview">
             <div className="flip-mm flip-zoom">
-              <FlipTag data={preview} settings={settings} />
+              <FlipTagAny data={preview} settings={settings} />
             </div>
             <div className="flip-mm flip-zoom">
-              <FlipStrip data={preview} settings={settings} />
+              <FlipStripAny data={preview} settings={settings} />
             </div>
           </div>
           <div className="cfg-grid">

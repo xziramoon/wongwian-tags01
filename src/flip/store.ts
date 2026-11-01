@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { useQueueStore } from '../store/queueStore';
 import { DEFAULT_FLIP_SETTINGS, FLIP_KEYS, type FlipSettings } from './config';
-import type { FlipData, FlipOverride, FlipOverrides, LastPrinted, TagPrinted, TodayRow } from './data';
+import type { FlipData, FlipGroup, FlipOverride, FlipOverrides, LastPrinted, TagPrinted, TodayRow } from './data';
 
 function load<T>(key: string, fallback: T): T {
   try {
@@ -13,6 +13,15 @@ function load<T>(key: string, fallback: T): T {
   }
   return fallback;
 }
+function loadGroups(): FlipGroup[] {
+  try {
+    const raw = localStorage.getItem(FLIP_KEYS.groups);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
 function save(key: string, value: unknown) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -21,7 +30,7 @@ function save(key: string, value: unknown) {
   }
 }
 
-export type FlipPrintKind = 'tags' | 'strips' | 'both';
+export type FlipPrintKind = 'tags' | 'strips' | 'both' | 'stickers';
 export interface FlipJob {
   kind: FlipPrintKind;
   items: FlipData[];
@@ -33,6 +42,7 @@ interface FlipState {
   lastPrinted: Record<string, LastPrinted>;
   tagsPrinted: Record<string, TagPrinted>;
   job: FlipJob | null;
+  groups: FlipGroup[];
 
   updateSetting: <K extends keyof FlipSettings>(key: K, value: FlipSettings[K]) => void;
   setOverride: (barcode: string, key: keyof FlipOverride, value: string) => void;
@@ -41,6 +51,8 @@ interface FlipState {
   markTagsPrinted: (items: FlipData[]) => void;
   acknowledge: (rows: TodayRow[]) => void;
   setJob: (job: FlipJob | null) => void;
+  upsertGroup: (g: FlipGroup) => void;
+  removeGroup: (id: string) => void;
 }
 
 const today = () => new Date().toISOString();
@@ -51,6 +63,7 @@ export const useFlipStore = create<FlipState>((set) => ({
   lastPrinted: load<Record<string, LastPrinted>>(FLIP_KEYS.lastPrinted, {}),
   tagsPrinted: load<Record<string, TagPrinted>>(FLIP_KEYS.tagsPrinted, {}),
   job: null,
+  groups: loadGroups(),
 
   updateSetting: (key, value) =>
     set((s) => {
@@ -91,6 +104,7 @@ export const useFlipStore = create<FlipState>((set) => ({
           placed: false,
           prevPrice: prev ? (unplaced ? prev.prevPrice : prev.price) : undefined,
           prevPack: prev ? (unplaced ? prev.prevPack : prev.pack) : undefined,
+          variant: d.variant,
         };
       });
       save(FLIP_KEYS.lastPrinted, lastPrinted);
@@ -101,7 +115,7 @@ export const useFlipStore = create<FlipState>((set) => ({
     set((s) => {
       const tagsPrinted = { ...s.tagsPrinted };
       items.forEach((d) => {
-        tagsPrinted[d.barcode] = { name: d.name, lot: d.lot, date: today() };
+        tagsPrinted[d.barcode] = { name: d.sig ?? d.name, lot: d.lot, date: today() };
       });
       save(FLIP_KEYS.tagsPrinted, tagsPrinted);
       return { tagsPrinted };
@@ -112,7 +126,9 @@ export const useFlipStore = create<FlipState>((set) => ({
     set((s) => {
       const lastPrinted = { ...s.lastPrinted };
       rows.forEach((r) => {
+        if (r.kind === 'mismatch') return; // แถวเตือนราคากลุ่มไม่เท่ากัน ไม่ใช่งานเปลี่ยนป้าย
         lastPrinted[r.data.barcode] = {
+          variant: r.data.variant,
           price: r.newPrice,
           pack: r.newPack,
           label: r.data.label,
@@ -125,6 +141,20 @@ export const useFlipStore = create<FlipState>((set) => ({
     }),
 
   setJob: (job) => set({ job }),
+
+  upsertGroup: (g) =>
+    set((s) => {
+      const groups = s.groups.some((x) => x.id === g.id) ? s.groups.map((x) => (x.id === g.id ? g : x)) : [...s.groups, g];
+      save(FLIP_KEYS.groups, groups);
+      return { groups };
+    }),
+
+  removeGroup: (id) =>
+    set((s) => {
+      const groups = s.groups.filter((x) => x.id !== id);
+      save(FLIP_KEYS.groups, groups);
+      return { groups };
+    }),
 }));
 
 /* ตั้งค่าที่ใช้วาดจริง: รวมค่าจากตั้งค่าหลักของแอป — "พิมพ์ขาว-ดำ" (printMono) และฟอนต์ตัวเลขราคา (priceFont) */
