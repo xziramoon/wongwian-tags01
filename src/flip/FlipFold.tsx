@@ -3,7 +3,7 @@ import { database } from '../lib/database';
 import { fmtPrice } from '../lib/utils';
 import { useQueueStore } from '../store/queueStore';
 import { useUIStore } from '../store/uiStore';
-import { FLIP_FONTS, FLIP_REDS, type FlipSettings } from './config';
+import { FLIP_FONTS, FLIP_REDS, FLIP_THEMES, type FlipSettings } from './config';
 import { computeNeedTags, computeToday, fromQueueItem, type FlipData } from './data';
 import { FlipStrip, FlipTag } from './FlipTag';
 import { printFlip, sendFlipRemote } from './print';
@@ -208,6 +208,24 @@ export default function FlipFold() {
             </div>
           </div>
           <div className="cfg-grid">
+            <div className="cfg-full">
+              <span className="cfg-lbl">ธีม (สี/ฟอนต์ตัวเลขเหมือนป้ายปกติ)</span>
+              <div className="flip-theme-row">
+                {FLIP_THEMES.map((t) => (
+                  <button
+                    key={t.value}
+                    className="btn btn-preset"
+                    aria-pressed={rawSettings.theme === t.value}
+                    onClick={() => updateSetting('theme', t.value)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <span className="fold-hint">
+                ขาว-ดำ: ติ๊ก "โหมดขาวดำ" ด้านบน หรือ "พิมพ์ขาว-ดำ" ในตั้งค่าป้ายปกติ — แดงทุกจุดเป็นดำ เงาเกาหลีเป็นเทา
+              </span>
+            </div>
             {SETTING_TEXT.map(({ key, label }) => (
               <div key={key}>
                 <span className="cfg-lbl">{label}</span>
@@ -228,6 +246,7 @@ export default function FlipFold() {
                 ))}
               </select>
             </div>
+            {rawSettings.theme === 'plain' && (
             <div>
               <span className="cfg-lbl">สีแดง</span>
               <div className="flip-red">
@@ -251,6 +270,7 @@ export default function FlipFold() {
                 />
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>

@@ -127,15 +127,22 @@ export const useFlipStore = create<FlipState>((set) => ({
   setJob: (job) => set({ job }),
 }));
 
-/* ตั้งค่าที่ใช้วาดจริง: ถ้าเปิด "พิมพ์ขาว-ดำ" ที่ตั้งค่าหลักของแอป ป้ายดำแดงก็เป็นขาวดำด้วย */
-const withMono = (settings: FlipSettings, printMono: boolean): FlipSettings =>
-  printMono && !settings.mono ? { ...settings, mono: true } : settings;
+/* ตั้งค่าที่ใช้วาดจริง: รวมค่าจากตั้งค่าหลักของแอป — "พิมพ์ขาว-ดำ" (printMono) และฟอนต์ตัวเลขราคา (priceFont) */
+const withApp = (settings: FlipSettings, printMono: boolean, priceFont: string): FlipSettings =>
+  (printMono && !settings.mono) || priceFont
+    ? { ...settings, mono: settings.mono || printMono, priceFont: priceFont || undefined }
+    : settings;
 
 export function useFlipSettings(): FlipSettings {
   const settings = useFlipStore((s) => s.settings);
   const printMono = useQueueStore((s) => !!s.config.printMono);
-  return useMemo(() => withMono(settings, printMono), [settings, printMono]);
+  const priceFont = useQueueStore((s) => String(s.config.priceFont || ''));
+  return useMemo(() => withApp(settings, printMono, priceFont), [settings, printMono, priceFont]);
 }
 
 export const getFlipSettings = (): FlipSettings =>
-  withMono(useFlipStore.getState().settings, !!useQueueStore.getState().config.printMono);
+  withApp(
+    useFlipStore.getState().settings,
+    !!useQueueStore.getState().config.printMono,
+    String(useQueueStore.getState().config.priceFont || ''),
+  );

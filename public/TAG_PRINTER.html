@@ -518,7 +518,7 @@
   .fs-face { flex: 0 0 40mm; width: 40mm; height: 31mm; display: flex; flex-direction: column; overflow: hidden; background: #fff; line-height: 1.1; }
   .fs-fold { position: absolute; left: 40mm; top: 0; bottom: 0; border-left: 0.25mm dashed #666; pointer-events: none; }
   .fs-pw { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 2mm; }
-  .fs-price { font-weight: 800; color: var(--ft-red); line-height: 1; white-space: nowrap; }
+  .fs-price { font-family: var(--ft-price-font, inherit); font-weight: var(--ft-price-weight, 800); color: var(--ft-red); line-height: 1; white-space: nowrap; }
   .fs-unit { font-size: 4.25mm; font-weight: 800; color: #111; line-height: 1.2; }
   .fs-pack { flex: 0 0 auto; background: #111; color: #fff; font-size: 3mm; font-weight: 600; text-align: center; padding: 0.9mm 1mm; white-space: nowrap; overflow: hidden; line-height: 1.25; }
   .fs-back { background: var(--ft-red); color: #fff; align-items: center; justify-content: center; text-align: center; }
@@ -526,6 +526,12 @@
   .fs-outsub { font-size: 3mm; font-weight: 400; margin-top: 1mm; }
   .flip-mono .ft-cn { background: #fff; color: #111; }
   .flip-mono .fs-price { color: #111; }
+  /* ธีมเดียวกับป้ายปกติ (tag-theme.css): หมึกแดง = ตัวเลขเอียง -4° / เกาหลี = หัวแดง + เงาเหลือง (ขาวดำ = เงาเทา) */
+  .ft-theme-ink .fs-price { display: inline-block; transform: rotate(-4deg); text-shadow: 0 0 0.3mm currentColor; line-height: 0.95; }
+  .ft-theme-korean .fs-price { letter-spacing: -0.3mm; text-shadow: 0.6mm 0.6mm 0 #FFD43B; }
+  .ft-theme-korean .ft-head { background: var(--ft-red); }
+  .ft-theme-korean:not(.flip-mono) .ft-cn { background: transparent; }
+  .flip-mono.ft-theme-korean .fs-price { text-shadow: 0.6mm 0.6mm 0 #b5b5b5; }
 
   #flip-sheets { display: none; }
   body.mode-flip #flip-sheets { display: block; }
@@ -573,7 +579,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-11-01a'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-11-01b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -1352,8 +1358,11 @@ document.body.addEventListener('click', function () {
 var FLIP = { w: 90, slotW: 40, stripH: 31, border: 0.75, tagsPerSheet: 14, stripsPerSheet: 18 };
 var FLIP_DEFAULTS = {
   shopCn: '黄六盛', shopTh: 'อึ้งลักเส็ง', corner: 'ปลีก-ส่ง', unit: 'บาท',
-  outText: 'สินค้าหมด', outSub: 'ขออภัย กำลังเติมของ', font: 'Kanit', red: '#D0021B', mono: false,
+  outText: 'สินค้าหมด', outSub: 'ขออภัย กำลังเติมของ', font: 'Kanit', red: '#D0021B', mono: false, theme: 'ink',
 };
+/* สี/ฟอนต์ตรงกับ src/flip/config.ts และธีมป้ายปกติ (INK_RED / THEME_ACCENT / tag-theme.css) */
+var FLIP_THEME_COLOR = { ink: '#C0141C', korean: '#B3261E' };
+var FLIP_THEME_FONT = { ink: "'Potta One',cursive", korean: "'Black Han Sans',sans-serif" };
 var FLIP_INK = '#111111';
 
 function normalizeFlipSettings(raw) {
@@ -1362,6 +1371,8 @@ function normalizeFlipSettings(raw) {
     m[k] = String(m[k] != null ? m[k] : FLIP_DEFAULTS[k]);
   });
   m.mono = m.mono === true;
+  if (m.theme !== 'ink' && m.theme !== 'korean' && m.theme !== 'plain') m.theme = 'ink';
+  m.priceFont = typeof m.priceFont === 'string' ? m.priceFont : '';
   if (!/^#[0-9a-f]{3,8}$/i.test(String(m.red))) m.red = FLIP_DEFAULTS.red;
   return m;
 }
@@ -1421,9 +1432,12 @@ function flipFitWidth(text, family, weight, maxW, maxS, minS) {
 function mm2(n) { return n.toFixed(2) + 'mm'; }
 function flipFamily(s) { return "'" + s.font + "',sans-serif"; }
 
+function flipRed(s) { return s.mono ? FLIP_INK : s.theme === 'plain' ? s.red : FLIP_THEME_COLOR[s.theme]; }
+function flipPriceFamily(s) { return s.priceFont || (s.theme === 'plain' ? flipFamily(s) : FLIP_THEME_FONT[s.theme]); }
+function flipPriceWeight(s) { return (s.priceFont || s.theme !== 'plain') ? 400 : 800; }
 function flipWrapAttrs(s, cls) {
-  var red = s.mono ? FLIP_INK : s.red;
-  return 'class="' + cls + (s.mono ? ' flip-mono' : '') + '" style="--ft-red:' + escapeHTML(red) + ';--ft-font:' + escapeHTML(flipFamily(s)) + '"';
+  return 'class="' + cls + ' ft-theme-' + s.theme + (s.mono ? ' flip-mono' : '') + '" style="--ft-red:' + escapeHTML(flipRed(s)) +
+    ';--ft-font:' + escapeHTML(flipFamily(s)) + ';--ft-price-font:' + escapeHTML(flipPriceFamily(s)) + ';--ft-price-weight:' + flipPriceWeight(s) + '"';
 }
 function flipTagHTML(d, s) {
   var family = flipFamily(s);
@@ -1443,8 +1457,9 @@ function flipTagHTML(d, s) {
 function flipFrontHTML(d, s) {
   var family = flipFamily(s);
   var price = flipNum(d.price);
+  var maxW = s.theme === 'ink' ? 33 : 36; /* ธีมเอียง -4° เผื่อมุม */
   return '<div ' + flipWrapAttrs(s, 'fs-face fs-front') + '>' +
-    '<div class="fs-pw"><div class="fs-price" style="font-size:' + mm2(flipFitWidth(price, family, 800, 36, 17.5, 11)) + '">' + escapeHTML(price) + '</div>' +
+    '<div class="fs-pw"><div class="fs-price" style="font-size:' + mm2(flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 17.5, 11)) + '">' + escapeHTML(price) + '</div>' +
     '<div class="fs-unit">' + escapeHTML(s.unit) + '</div></div>' +
     (d.pack ? '<div class="fs-pack" style="font-size:' + mm2(flipFitWidth(d.pack, family, 600, 36, 3, 2)) + '">' + escapeHTML(d.pack) + '</div>' : '') +
     '</div>';
@@ -1466,6 +1481,7 @@ function loadFlipFonts(s) {
   var f = '"' + s.font + '"';
   var jobs = [400, 600, 800].map(function (w) { return document.fonts.load(w + ' 16px ' + f, 'ก'); });
   jobs.push(document.fonts.load('900 16px "Noto Serif SC"', s.shopCn));
+  jobs.push(document.fonts.load('400 16px ' + flipPriceFamily(s), 'ก0'));
   return Promise.race([
     Promise.all(jobs).catch(function () {}),
     new Promise(function (res) { setTimeout(res, 4000); }),

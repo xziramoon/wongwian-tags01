@@ -36,15 +36,21 @@ export function fitWidth(
   return Math.max(minSize, Math.min(maxSize, round(maxWidth / em)));
 }
 
-/* ฟอนต์เว็บโหลดเสร็จช้ากว่า render ครั้งแรก — เปลี่ยนค่านี้เพื่อให้คำนวณขนาดใหม่ */
-export function useFontsTick(): number {
+/* ฟอนต์เว็บโหลดเสร็จช้ากว่า render ครั้งแรก — เปลี่ยนค่านี้เพื่อให้คำนวณขนาดใหม่
+ * families = ฟอนต์ที่ต้องรอ (เช่นฟอนต์พู่กันของธีม ที่ยังไม่มีป้ายอื่นในหน้าเรียกใช้) */
+export function useFontsTick(...families: string[]): number {
   const [tick, setTick] = useState(0);
+  const key = families.join('|');
   useEffect(() => {
     let alive = true;
-    document.fonts?.ready.then(() => alive && setTick((t) => t + 1));
+    const loads = key ? key.split('|').map((f) => document.fonts?.load(`400 16px ${f}`, 'ก0')) : [];
+    Promise.all(loads)
+      .catch(() => {})
+      .then(() => document.fonts?.ready)
+      .then(() => alive && setTick((t) => t + 1));
     return () => {
       alive = false;
     };
-  }, []);
+  }, [key]);
   return tick;
 }

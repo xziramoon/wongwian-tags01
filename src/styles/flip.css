@@ -32,16 +32,23 @@
 .fs-face { flex: 0 0 40mm; width: 40mm; height: 31mm; display: flex; flex-direction: column; overflow: hidden; background: #fff; line-height: 1.1; }
 .fs-fold { position: absolute; left: 40mm; top: 0; bottom: 0; border-left: 0.25mm dashed #666; pointer-events: none; }
 .fs-pw { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 2mm; }
-.fs-price { font-weight: 800; color: var(--ft-red); line-height: 1; white-space: nowrap; }
+.fs-price { font-family: var(--ft-price-font, inherit); font-weight: var(--ft-price-weight, 800); color: var(--ft-red); line-height: 1; white-space: nowrap; }
 .fs-unit { font-size: 4.25mm; font-weight: 800; color: #111; line-height: 1.2; }
 .fs-pack { flex: 0 0 auto; background: #111; color: #fff; font-size: 3mm; font-weight: 600; text-align: center; padding: 0.9mm 1mm; white-space: nowrap; overflow: hidden; line-height: 1.25; }
 .fs-back { background: var(--ft-red); color: #fff; align-items: center; justify-content: center; text-align: center; }
 .fs-out { font-weight: 800; line-height: 1.2; white-space: nowrap; }
 .fs-outsub { font-size: 3mm; font-weight: 400; margin-top: 1mm; }
 
+/* ธีมเดียวกับป้ายปกติของแอป (src/styles/tag-theme.css): หมึกแดง = ตัวเลขเอียง -4° / เกาหลี = หัวแดง + เงาเหลือง */
+.ft-theme-ink .fs-price { display: inline-block; transform: rotate(-4deg); text-shadow: 0 0 0.3mm currentColor; line-height: 0.95; }
+.ft-theme-korean .fs-price { letter-spacing: -0.3mm; text-shadow: 0.6mm 0.6mm 0 #FFD43B; }
+.ft-theme-korean .ft-head { background: var(--ft-red); }
+.ft-theme-korean:not(.flip-mono) .ft-cn { background: transparent; }
+
 /* โหมดขาวดำ: ไม่มีแดงเหลือ (ตราจีนกลับสีเป็นขาวบนหัวดำ) */
 .flip-mono .ft-cn { background: #fff; color: #111; }
 .flip-mono.fs-front .fs-price, .flip-mono .fs-price { color: #111; }
+.flip-mono.ft-theme-korean .fs-price { text-shadow: 0.6mm 0.6mm 0 #b5b5b5; } /* เงาเทาแทนเหลือง เหมือน tag-mono.css */
 
 /* ---------- แผ่น A4 สำหรับพิมพ์ ---------- */
 #flip-sheets { display: none; }
@@ -64,6 +71,7 @@
 .flip-badge { background: var(--r); color: #fff; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
 .flip-btn-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 14px 4px; }
 .flip-btn-remote { padding-top: 0; }
+.flip-theme-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 6px; }
 .flip-btn-row2 { grid-template-columns: 1fr 1fr; padding-top: 8px; padding-bottom: 12px; }
 .flip-note { padding: 0 14px 14px; font-size: 12.5px; color: var(--txt2); line-height: 1.5; font-family: var(--f-ui); }
 .flip-empty { padding: 14px; font-size: 13.5px; color: var(--txt2); font-family: var(--f-ui); }

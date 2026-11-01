@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import JsBarcode from 'jsbarcode';
-import { INK, TAG, fontStack, type FlipSettings } from './config';
+import { TAG, fontStack, flipPriceFamily, flipPriceWeight, flipRed, type FlipSettings } from './config';
 import { flipNum, type FlipData } from './data';
 import { fitName, fitWidth, useFontsTick } from './fit';
 
-/* ตัวแปรสี/ฟอนต์ของป้ายชุดนี้ — โหมดขาวดำแทนแดงด้วยดำทั้งหมด */
+/* ตัวแปรสี/ฟอนต์ของป้ายชุดนี้ — สีตามธีม (หมึกแดง/เกาหลี) โหมดขาวดำแทนแดงด้วยดำทั้งหมด */
 const flipVars = (s: FlipSettings) =>
-  ({ '--ft-red': s.mono ? INK : s.red, '--ft-font': fontStack(s.font) }) as CSSProperties;
-const monoClass = (s: FlipSettings) => (s.mono ? ' flip-mono' : '');
+  ({ '--ft-red': flipRed(s), '--ft-font': fontStack(s.font), '--ft-price-font': flipPriceFamily(s), '--ft-price-weight': flipPriceWeight(s) }) as CSSProperties;
+const wrapClass = (s: FlipSettings, base: string) => `${base} ft-theme-${s.theme}${s.mono ? ' flip-mono' : ''}`;
+const FONT_WAIT = ['"Noto Serif SC"'];
 
 interface Props {
   data: FlipData;
@@ -39,12 +40,12 @@ function Barcode({ value }: { value: string }) {
 /* ตัวป้ายถาวร 90 × 40 มม. */
 export function FlipTag({ data, settings }: Props) {
   const family = fontStack(settings.font);
-  const tick = useFontsTick();
+  const tick = useFontsTick(...FONT_WAIT);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const nameSz = useMemo(() => fitName(data.name, family), [data.name, family, tick]);
 
   return (
-    <div className={`ft${monoClass(settings)}`} style={flipVars(settings)}>
+    <div className={wrapClass(settings, 'ft')} style={flipVars(settings)}>
       <div className="ft-head">
         <span className="ft-cn">{settings.shopCn}</span>
         <span className="ft-th">{settings.shopTh}</span>
@@ -68,18 +69,25 @@ export function FlipTag({ data, settings }: Props) {
   );
 }
 
-/* ด้านหน้าแถบ: ราคา */
+/* ด้านหน้าแถบ: ราคา (ฟอนต์/สีตามธีมเดียวกับป้ายปกติ) */
 export function FlipFront({ data, settings }: Props) {
   const family = fontStack(settings.font);
-  const tick = useFontsTick();
+  const priceFamily = flipPriceFamily(settings);
+  const priceWeight = flipPriceWeight(settings);
+  const tick = useFontsTick(priceFamily, ...FONT_WAIT);
   const price = flipNum(data.price);
+  // ธีมเอียง -4° ต้องเว้นที่ขอบเผื่อมุม จึงจำกัดความกว้างน้อยกว่าเล็กน้อย
+  const maxW = settings.theme === 'ink' ? 33 : 36;
   /* eslint-disable react-hooks/exhaustive-deps */
-  const priceSz = useMemo(() => fitWidth(price, family, 800, 36, 17.5, 11), [price, family, tick]);
+  const priceSz = useMemo(
+    () => fitWidth(price, priceFamily, priceWeight, maxW, 17.5, 11),
+    [price, priceFamily, priceWeight, maxW, tick],
+  );
   const packSz = useMemo(() => fitWidth(data.pack, family, 600, 36, 3, 2), [data.pack, family, tick]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
   return (
-    <div className={`fs-face fs-front${monoClass(settings)}`} style={flipVars(settings)}>
+    <div className={wrapClass(settings, 'fs-face fs-front')} style={flipVars(settings)}>
       <div className="fs-pw">
         <div className="fs-price" style={{ fontSize: `${priceSz}mm` }}>
           {price}
@@ -102,7 +110,7 @@ export function FlipBack({ settings }: { settings: FlipSettings }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const sz = useMemo(() => fitWidth(settings.outText, family, 800, 36, 8, 4), [settings.outText, family, tick]);
   return (
-    <div className={`fs-face fs-back${monoClass(settings)}`} style={flipVars(settings)}>
+    <div className={wrapClass(settings, 'fs-face fs-back')} style={flipVars(settings)}>
       <div className="fs-out" style={{ fontSize: `${sz}mm` }}>
         {settings.outText}
       </div>
