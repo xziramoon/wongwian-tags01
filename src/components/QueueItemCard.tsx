@@ -1,6 +1,7 @@
 import { useUIStore } from '../store/uiStore';
 import { useQueueStore } from '../store/queueStore';
 import type { QueueItem } from '../types';
+import ItemOverrides from '../flip/ItemOverrides';
 import { autoFontSize, fmtPrice } from '../lib/utils';
 import { HAMPER_DEFAULTS } from '../lib/hamper';
 
@@ -106,8 +107,13 @@ export default function QueueItemCard({ item, index }: Props) {
           <div className={`mode-btn${item.TagMode === 'hamper' ? ' active' : ''}`} onClick={() => set('TagMode', 'hamper')}>
             🎁 แขวนกระเช้า
           </div>
+          <div className={`mode-btn${item.TagMode === 'flip' ? ' active' : ''}`} onClick={() => set('TagMode', 'flip')}>
+            ดำแดง (แถบพลิก)
+          </div>
         </div>
       </div>
+
+      {item.TagMode === 'flip' && <ItemOverrides item={item} />}
 
       {item.TagMode === 'fridge' && (
         <span className="fold-hint">
