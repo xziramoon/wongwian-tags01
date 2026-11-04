@@ -639,14 +639,15 @@
   .cn-sl .cn-size, .cn-pl .cn-size { font-size: 9mm; }
 
   /* ---------- ราคา ---------- */
-  .cn-priceblk { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  /* ช่องราคาเป็น container: ตัวเลขวัดขนาดจากช่องที่เหลือจริง (cqw/cqh — priceFit.ts) */
+  .cn-priceblk { flex: 1 1 0; min-height: 0; container-type: size; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .cn-pw { display: flex; flex-direction: column; align-items: flex-end; gap: 1.6mm; }
   .cn-num {
     display: inline-block; font-family: 'Potta One', cursive; font-weight: 400; color: var(--cn-red);
-    transform: rotate(-4deg); text-shadow: 0 0 0.5mm currentColor; line-height: 0.95; white-space: nowrap;
+    text-shadow: 0 0 0.5mm currentColor; white-space: nowrap; /* ขนาด/ความสูงบรรทัด/เอียง ตั้งแบบ inline จาก priceFit.ts */
   }
   .cn-baht { font-weight: 800; font-size: 16.4mm; color: #111; line-height: 1; }
-  .cn-sl .cn-pw { flex-direction: row; align-items: flex-end; gap: 6.4mm; padding-bottom: 4.8mm; }
+  .cn-sl .cn-pw { flex-direction: row; align-items: flex-end; gap: 6.4mm; }
   .cn-sl .cn-baht { font-size: 19mm; }
   .cn-pl .cn-baht { font-size: 17.5mm; }
 
@@ -676,7 +677,7 @@
   .cn-pl-left .cn-pack-p { font-size: 16.4mm; }
   .cn-pl-left .cn-pack-b { font-size: 8mm; }
   .cn-pl-left .cn-foot { margin: 0 -8mm; padding: 0 8mm; height: 10.6mm; font-size: 4.5mm; }
-  .cn-pl-right { flex: 1 1 0; min-width: 0; border-left: 1.6mm solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .cn-pl-right { flex: 1 1 0; min-width: 0; container-type: size; border-left: 1.6mm solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 
   /* ---------- ขาว-ดำ: ไม่มีสีแดงเหลือ ---------- */
   .cn-mono { --cn-red: #111; }
@@ -731,7 +732,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-11-05a'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-11-05b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -1840,7 +1841,11 @@ var CN_NAME_STEPS = {
   pl: [[10, 19], [18, 16.4], [28, 13.8], [Infinity, 11.6]],
   pp: [[14, 22], [22, 19], [32, 16.4], [Infinity, 13.8]],
 };
-var CN_PRICE_BOX = { sp: [140, 116, 37], sl: [169, 106, 37], pl: [143, 124, 34], pp: [175, 112, 40] };
+/* ช่องราคา: ตัวเลขขยายให้ใหญ่สุดเท่าที่ช่องที่เหลือจริงรับได้ (วัดขอบหมึกจริง + เอียง -4°) — ตรงกับ src/cnsign/priceFit.ts */
+var CN_PRICE_LAYOUT = { sp: { bahtMm: 16.4, beside: false, gap: 1.6 }, sl: { bahtMm: 19, beside: true, gap: 6.4 }, pp: { bahtMm: 16.4, beside: false, gap: 1.6 }, pl: { bahtMm: 17.5, beside: false, gap: 1.6 } };
+var CN_PRICE_PAD = { x: 4, y: 3 };
+var CN_PRICE_TILT = 4;
+var CN_PRICE_CAP = 220;
 var CN_PRICE_FAMILY = "'Potta One',cursive";
 
 function normalizeCnSettings(raw) {
@@ -1867,20 +1872,42 @@ function cnNameSize(v, name) {
   for (var i = 0; i < steps.length; i++) if (name.length <= steps[i][0]) return steps[i][1];
   return steps[steps.length - 1][1];
 }
-function cnPriceSize(v, d) {
-  var b = CN_PRICE_BOX[v];
-  var maxH = v === 'sl' && d.name.length > 24 ? 87 : b[1];
-  return flipFitWidth(d.price, CN_PRICE_FAMILY, 400, b[0], maxH, b[2]);
+var cnCtx = null;
+function cnMeasureInk(text, family, weight) {
+  cnCtx = cnCtx || document.createElement('canvas').getContext('2d');
+  cnCtx.font = weight + ' 100px ' + family;
+  var m = cnCtx.measureText(text);
+  var fb = function (v, d) { return (v == null ? d : v) / 100; };
+  return {
+    adv: m.width / 100, abl: m.actualBoundingBoxLeft / 100, abr: m.actualBoundingBoxRight / 100,
+    asc: m.actualBoundingBoxAscent / 100, desc: m.actualBoundingBoxDescent / 100,
+    fa: fb(m.fontBoundingBoxAscent, 110), fd: fb(m.fontBoundingBoxDescent, 30),
+  };
+}
+function cnNum(n) { return String(+n.toFixed(4)); }
+function cnPriceFit(v, m, unitEm) {
+  var lay = CN_PRICE_LAYOUT[v];
+  var a = CN_PRICE_TILT * Math.PI / 180;
+  var wi = m.abl + m.abr;
+  var hi = m.asc + m.desc;
+  var bw = wi * Math.cos(a) + hi * Math.sin(a);
+  var bh = wi * Math.sin(a) + hi * Math.cos(a);
+  var subW = lay.beside ? unitEm * lay.bahtMm + lay.gap : 0;
+  var subH = lay.beside ? 0 : lay.bahtMm + lay.gap;
+  var dx = (m.abr - m.abl) / 2 - m.adv / 2;
+  var dy = (m.fa - m.fd - (m.asc - m.desc)) / 2;
+  return 'font-size:min(calc((100cqw - ' + cnNum(2 * CN_PRICE_PAD.x + subW) + 'mm) / ' + cnNum(bw) + '), calc((100cqh - ' + cnNum(2 * CN_PRICE_PAD.y + subH) + 'mm) / ' + cnNum(bh) + '), ' + CN_PRICE_CAP + 'mm);' +
+    'line-height:' + cnNum(bh) + ';transform:rotate(-' + CN_PRICE_TILT + 'deg) translate(' + cnNum(-dx) + 'em, ' + cnNum(-dy) + 'em)';
 }
 function cnSignHTML(d, s) {
   var v = cnVariant(d);
-  var size = cnPriceSize(v, d);
+  var numStyle = cnPriceFit(v, cnMeasureInk(d.price, CN_PRICE_FAMILY, 400), cnMeasureInk(s.unit, "'Kanit',sans-serif", 800).adv);
   var red = s.mono ? '#111111' : s.red;
   var wrap = '<div class="cn cn-' + v + ' ' + (d.orient === 'portrait' ? 'cn-p' : 'cn-l') + (s.mono ? ' cn-mono' : '') + '" style="--cn-red:' + escapeHTML(red) + '">';
   var nameEl = '<div class="cn-name" style="font-size:' + mm2(cnNameSize(v, d.name)) + '">' + escapeHTML(d.name) + '</div>';
   var sizeEl = d.size ? '<div class="cn-size">' + escapeHTML(d.size) + '</div>' : '';
   var head = '<div class="cn-head">' + nameEl + sizeEl + '</div>';
-  var price = '<div class="cn-priceblk"><div class="cn-pw"><div class="cn-num" style="font-size:' + mm2(size) + '">' + escapeHTML(d.price) + '</div><div class="cn-baht">' + escapeHTML(s.unit) + '</div></div></div>';
+  var price = '<div class="cn-priceblk"><div class="cn-pw"><div class="cn-num" style="' + numStyle + '">' + escapeHTML(d.price) + '</div><div class="cn-baht">' + escapeHTML(s.unit) + '</div></div></div>';
   var pack = d.packPrice
     ? '<div class="cn-pack"><div class="cn-pack-l">' + escapeHTML(d.packLabel) + '</div><div class="cn-pack-r"><span class="cn-pack-p">' + escapeHTML(d.packPrice) + '</span><span class="cn-pack-b">' + escapeHTML(s.unit) + '</span></div></div>'
     : '';
@@ -1898,7 +1925,7 @@ function cnSignHTML(d, s) {
     ? '<div class="cn-pack cn-pack2"><div class="cn-pack-l">' + escapeHTML(d.packLabel) + '</div><div class="cn-pack-r"><span class="cn-pack-p">' + escapeHTML(d.packPrice) + '</span><span class="cn-pack-b">' + escapeHTML(s.unit) + '</span></div></div>'
     : '';
   return wrap + header + '<div class="cn-pbody"><div class="cn-pl-left"><div class="cn-pl-info">' + nameEl + sizeEl + '</div><div class="cn-grow"></div>' + pack2 + foot + '</div>' +
-    '<div class="cn-pl-right"><div class="cn-pw"><div class="cn-num" style="font-size:' + mm2(size) + '">' + escapeHTML(d.price) + '</div><div class="cn-baht">' + escapeHTML(s.unit) + '</div></div></div></div></div>';
+    '<div class="cn-pl-right"><div class="cn-pw"><div class="cn-num" style="' + numStyle + '">' + escapeHTML(d.price) + '</div><div class="cn-baht">' + escapeHTML(s.unit) + '</div></div></div></div></div>';
 }
 
 function loadCnFonts(s) {
