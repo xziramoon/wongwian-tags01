@@ -14,12 +14,12 @@ export default function PrintFooter() {
   const [sending, setSending] = useState(false);
   const [progressLabel, setProgressLabel] = useState('');
 
-  // ป้ายดำแดง (แถบพลิก) พิมพ์/ส่งจากเมนูของมันเอง (A4 ขอบ 5 มม. คนละแบบกับป้ายทั่วไป)
-  const stdQueue = queue.filter((i) => i.TagMode !== 'flip');
+  // ป้ายดำแดง (แถบพลิก) และป้ายจีน A4 พิมพ์/ส่งจากเมนูของมันเอง (A4 ขอบ 5 มม. คนละแบบกับป้ายทั่วไป)
+  const stdQueue = queue.filter((i) => i.TagMode !== 'flip' && i.TagMode !== 'cnsign');
 
   const handleLocalPrint = () => {
     if (queue.length && !stdQueue.length) {
-      showToast('ในคิวมีแต่ป้ายดำแดง — พิมพ์จากเมนู "ป้ายดำแดง (แถบพลิก)" ด้านบน', 'error');
+      showToast('ในคิวมีแต่ป้ายดำแดง/ป้ายจีน A4 — พิมพ์จากเมนู "ป้ายดำแดง" หรือ "ป้ายจีน A4" ด้านบน', 'error');
       return;
     }
     if (stdQueue.length) logPrint('local', stdQueue);
@@ -32,7 +32,7 @@ export default function PrintFooter() {
       return;
     }
     if (!stdQueue.length) {
-      showToast('ในคิวมีแต่ป้ายดำแดง — ใช้ปุ่ม 📡 ในเมนู "ป้ายดำแดง (แถบพลิก)" เพื่อส่งไปเครื่องปลายทาง', 'error');
+      showToast('ในคิวมีแต่ป้ายดำแดง/ป้ายจีน A4 — ใช้ปุ่ม 📡 ในเมนู "ป้ายดำแดง" หรือ "ป้ายจีน A4" เพื่อส่งไปเครื่องปลายทาง', 'error');
       return;
     }
     setSending(true);

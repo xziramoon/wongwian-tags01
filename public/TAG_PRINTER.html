@@ -578,6 +578,123 @@
   @media print {
     body.mode-flip .fsheet { margin: 0; box-shadow: none; }
   }
+
+  /* ============================================================
+   * ป้ายใหญ่ "ป้ายจีน" A4 (payload: data.cnsign) — สำเนาจาก src/styles/tag-cnsign.css + src/cnsign/*
+   * ถ้าแก้ต้นทาง ต้องแก้ที่นี่ด้วย
+   * ============================================================ */
+  .cn {
+    --cn-red: #C0141C;
+    box-sizing: border-box; position: relative; display: flex; overflow: hidden;
+    background: #fff; color: #111; border: 1.6mm solid #111;
+    font-family: 'Kanit', sans-serif; font-weight: 400; line-height: 1.15;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .cn *, .cn *::before, .cn *::after { box-sizing: border-box; }
+  .cn-p { width: 200mm; height: 287mm; }
+  .cn-l { width: 287mm; height: 200mm; }
+  .cn-sp, .cn-sl { flex-direction: row; }
+  .cn-pp, .cn-pl { flex-direction: column; }
+  .cn-grow { flex: 1 1 0; min-height: 0; min-width: 0; }
+
+  /* ---------- แถบตั้ง (strip) ---------- */
+  .cn-side { flex: 0 0 36mm; background: #111; padding: 3.2mm; display: flex; flex-direction: column; align-items: center; gap: 5.8mm; }
+  .cn-sl .cn-side { flex-basis: 34.4mm; gap: 4.8mm; }
+  .cn-plate {
+    width: 100%; background: var(--cn-red); color: #fff; padding: 4.8mm 0 4.2mm; text-align: center;
+    font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 22mm; line-height: 1.08; flex: none;
+  }
+  .cn-sl .cn-plate { font-size: 19mm; }
+  .cn-plate span { display: block; }
+  .cn-shopv { writing-mode: vertical-rl; font-weight: 800; font-size: 11.6mm; color: #fff; letter-spacing: 0.5mm; white-space: nowrap; flex: none; }
+  .cn-sl .cn-shopv { font-size: 10mm; }
+  .cn-dash { width: 15mm; height: 0.8mm; background: var(--cn-red); flex: none; }
+  .cn-sl .cn-dash { width: 13mm; }
+  .cn-cornerv { writing-mode: vertical-rl; font-weight: 400; font-size: 7mm; color: #ccc; padding-bottom: 2mm; white-space: nowrap; flex: none; }
+  .cn-sl .cn-cornerv { font-size: 5.8mm; }
+  .cn-main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
+
+  /* ---------- แผ่นป้ายบน (plaque) หัวป้าย ---------- */
+  .cn-ph { flex: none; height: 36mm; background: #111; display: flex; align-items: stretch; gap: 6.4mm; padding-right: 7mm; }
+  .cn-pl .cn-ph { height: 32.8mm; gap: 8mm; }
+  .cn-ph-plate { flex: none; background: var(--cn-red); padding: 2.4mm; display: flex; }
+  .cn-ph-plate-in {
+    border: 0.8mm solid #fff; padding: 0 6.4mm; display: flex; align-items: center; color: #fff; white-space: nowrap;
+    font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 17mm; letter-spacing: 3.2mm; line-height: 1;
+  }
+  .cn-ph-shop { flex: 1 1 0; min-width: 0; align-self: center; color: #fff; font-weight: 800; font-size: 15mm; letter-spacing: 0.3mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cn-pl .cn-ph-shop { font-size: 19mm; }
+  .cn-ph-corner { flex: none; align-self: center; color: #ccc; font-weight: 400; font-size: 6mm; white-space: nowrap; }
+  .cn-pl .cn-ph-corner { font-size: 7mm; }
+
+  /* ---------- ชื่อ + ขนาด ---------- */
+  .cn-head { flex: none; padding: 9mm 8.5mm 5.8mm; border-bottom: 1.6mm solid #111; }
+  .cn-pp .cn-head { padding: 7.4mm 8.5mm 5.3mm; }
+  .cn-name {
+    font-weight: 800; line-height: 1.15; color: #111; word-break: break-word; text-wrap: balance; overflow: hidden;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  }
+  .cn-pl .cn-name { -webkit-line-clamp: 3; }
+  .cn-size { font-weight: 400; font-size: 10mm; color: #333; margin-top: 1mm; line-height: 1.15; }
+  .cn-sl .cn-size, .cn-pl .cn-size { font-size: 9mm; }
+
+  /* ---------- ราคา ---------- */
+  .cn-priceblk { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .cn-pw { display: flex; flex-direction: column; align-items: flex-end; gap: 1.6mm; }
+  .cn-num {
+    display: inline-block; font-family: 'Potta One', cursive; font-weight: 400; color: var(--cn-red);
+    transform: rotate(-4deg); text-shadow: 0 0 0.5mm currentColor; line-height: 0.95; white-space: nowrap;
+  }
+  .cn-baht { font-weight: 800; font-size: 16.4mm; color: #111; line-height: 1; }
+  .cn-sl .cn-pw { flex-direction: row; align-items: flex-end; gap: 6.4mm; padding-bottom: 4.8mm; }
+  .cn-sl .cn-baht { font-size: 19mm; }
+  .cn-pl .cn-baht { font-size: 17.5mm; }
+
+  /* ---------- ยกลัง (กลืนไปกับป้าย ไม่มีกรอบ/แถบดำ) ---------- */
+  .cn-pack { flex: none; margin: 0 8.5mm; border-top: 0.5mm solid #111; padding: 2.6mm 0 3.7mm; display: flex; align-items: baseline; justify-content: space-between; gap: 4mm; }
+  .cn-pack-l { min-width: 0; font-weight: 600; font-size: 10.6mm; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cn-pack-r { flex: none; display: flex; align-items: baseline; gap: 2mm; }
+  .cn-pack-p { font-family: 'Potta One', cursive; font-weight: 400; font-size: 17mm; color: var(--cn-red); line-height: 1; }
+  .cn-pack-b { font-weight: 800; font-size: 8.5mm; color: #111; }
+  .cn-sl .cn-pack-l { font-size: 10mm; }
+  .cn-sl .cn-pack-p { font-size: 15.3mm; }
+  .cn-sl .cn-pack-b { font-size: 8mm; }
+
+  /* ---------- ท้ายป้าย ---------- */
+  .cn-foot { flex: none; height: 10.6mm; border-top: 0.5mm solid #111; display: flex; align-items: center; justify-content: space-between; padding: 0 7.4mm; font-weight: 400; font-size: 5mm; color: #555; white-space: nowrap; }
+  .cn-sl .cn-foot { height: 10mm; font-size: 4.8mm; }
+  .cn-foot-bc { letter-spacing: 0.5mm; }
+
+  /* ---------- plaque-l: ซ้ายข้อมูล / ขวาราคา ---------- */
+  .cn-pbody { flex: 1 1 0; min-height: 0; display: flex; }
+  .cn-pl-left { flex: 0 0 44%; min-width: 0; padding: 7.4mm 8mm 0; display: flex; flex-direction: column; gap: 2mm; }
+  .cn-pl-info { flex: none; display: flex; flex-direction: column; gap: 2mm; }
+  .cn-pl-info .cn-size { margin-top: 0; }
+  .cn-pl-left .cn-pack2 { margin: 0; flex-direction: column; align-items: stretch; gap: 0; padding: 2mm 0 2.4mm; }
+  .cn-pl-left .cn-pack-l { font-size: 9mm; }
+  .cn-pl-left .cn-pack-r { justify-content: flex-end; }
+  .cn-pl-left .cn-pack-p { font-size: 16.4mm; }
+  .cn-pl-left .cn-pack-b { font-size: 8mm; }
+  .cn-pl-left .cn-foot { margin: 0 -8mm; padding: 0 8mm; height: 10.6mm; font-size: 4.5mm; }
+  .cn-pl-right { flex: 1 1 0; min-width: 0; border-left: 1.6mm solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+  /* ---------- ขาว-ดำ: ไม่มีสีแดงเหลือ ---------- */
+  .cn-mono { --cn-red: #111; }
+  .cn-mono .cn-plate { background: #fff; color: #111; }
+  .cn-mono .cn-dash { background: #fff; }
+  .cn-mono .cn-ph-plate { background: #fff; }
+  .cn-mono .cn-ph-plate-in { border-color: #111; color: #111; }
+
+  #cn-sheets { display: none; }
+  body.mode-cn #cn-sheets { display: block; }
+  body.mode-cn #print-area, body.mode-cn #flip-sheets { display: none; }
+  .cn-sheet { break-after: page; page-break-after: always; overflow: hidden; margin: 0 auto 8mm; background: #fff; box-shadow: 0 1px 0 rgba(23,23,37,.04), 0 20px 50px rgba(23,23,37,.14); }
+  .cn-sheet:last-child { break-after: auto; page-break-after: auto; margin-bottom: 0; }
+  .cn-sheet-p { width: 200mm; height: 287mm; }
+  .cn-sheet-l { width: 287mm; height: 200mm; }
+  @media print {
+    body.mode-cn .cn-sheet { margin: 0; box-shadow: none; }
+  }
 </style>
 </head>
 <body>
@@ -605,6 +722,7 @@
       <div class="empty-msg">รอรับงานพิมพ์จากเครื่องหลัก...</div>
     </div>
     <div id="flip-sheets"></div>
+    <div id="cn-sheets"></div>
   </div>
 
 <script>
@@ -613,7 +731,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-11-04c'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-11-05a'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -1672,6 +1790,7 @@ function renderFlip(flip) {
     }
     var host = document.getElementById('flip-sheets');
     host.innerHTML = html;
+    document.body.classList.remove('mode-cn');
     document.body.classList.add('mode-flip');
     host.querySelectorAll('.ft-bc').forEach(function (svg) {
       try {
@@ -1706,6 +1825,129 @@ function printFlipSheets() {
     window.addEventListener('afterprint', finish);
     window.print();
     setTimeout(finish, 1500); // เบราว์เซอร์ที่ไม่ยิง afterprint
+  });
+}
+
+/* ============================================================
+ * ป้ายใหญ่ "ป้ายจีน" A4 — พอร์ตมาจาก src/cnsign/* (config.ts / data.ts / CnSignTag.tsx)
+ * payload: data.cnsign = { orient: 'portrait'|'landscape', settings, items:[CnSignData] }
+ * ถ้าแก้ต้นทาง ต้องแก้ที่นี่ด้วย
+ * ============================================================ */
+var CN_DEFAULTS = { style: 'strip', orient: 'portrait', shopCn: '黄六盛', shopTh: 'อึ้งลักเส็ง', corner: 'ปลีก-ส่ง', unit: 'บาท', red: '#C0141C', mono: false };
+var CN_NAME_STEPS = {
+  sp: [[12, 21], [20, 18], [30, 15.3], [Infinity, 12.7]],
+  sl: [[16, 20], [24, 17], [34, 14.3], [Infinity, 12.2]],
+  pl: [[10, 19], [18, 16.4], [28, 13.8], [Infinity, 11.6]],
+  pp: [[14, 22], [22, 19], [32, 16.4], [Infinity, 13.8]],
+};
+var CN_PRICE_BOX = { sp: [140, 116, 37], sl: [169, 106, 37], pl: [143, 124, 34], pp: [175, 112, 40] };
+var CN_PRICE_FAMILY = "'Potta One',cursive";
+
+function normalizeCnSettings(raw) {
+  var m = Object.assign({}, CN_DEFAULTS, raw || {});
+  ['shopCn', 'shopTh', 'corner', 'unit'].forEach(function (k) { m[k] = String(m[k] != null ? m[k] : CN_DEFAULTS[k]); });
+  m.mono = m.mono === true;
+  if (!/^#[0-9a-f]{3,8}$/i.test(String(m.red))) m.red = CN_DEFAULTS.red;
+  return m;
+}
+function normalizeCnItem(raw) {
+  var q = raw || {};
+  var str = function (k) { return String(q[k] != null ? q[k] : ''); };
+  return {
+    name: str('name'), size: str('size'), price: str('price'), packLabel: str('packLabel'), packPrice: str('packPrice'),
+    barcode: str('barcode'), branch: str('branch') || 'สาขาวงเวียน',
+    style: q.style === 'plaque' ? 'plaque' : 'strip',
+    orient: q.orient === 'landscape' ? 'landscape' : 'portrait',
+    qty: Math.max(1, parseInt(q.qty, 10) || 1),
+  };
+}
+function cnVariant(d) { return (d.style === 'strip' ? 's' : 'p') + (d.orient === 'portrait' ? 'p' : 'l'); }
+function cnNameSize(v, name) {
+  var steps = CN_NAME_STEPS[v];
+  for (var i = 0; i < steps.length; i++) if (name.length <= steps[i][0]) return steps[i][1];
+  return steps[steps.length - 1][1];
+}
+function cnPriceSize(v, d) {
+  var b = CN_PRICE_BOX[v];
+  var maxH = v === 'sl' && d.name.length > 24 ? 87 : b[1];
+  return flipFitWidth(d.price, CN_PRICE_FAMILY, 400, b[0], maxH, b[2]);
+}
+function cnSignHTML(d, s) {
+  var v = cnVariant(d);
+  var size = cnPriceSize(v, d);
+  var red = s.mono ? '#111111' : s.red;
+  var wrap = '<div class="cn cn-' + v + ' ' + (d.orient === 'portrait' ? 'cn-p' : 'cn-l') + (s.mono ? ' cn-mono' : '') + '" style="--cn-red:' + escapeHTML(red) + '">';
+  var nameEl = '<div class="cn-name" style="font-size:' + mm2(cnNameSize(v, d.name)) + '">' + escapeHTML(d.name) + '</div>';
+  var sizeEl = d.size ? '<div class="cn-size">' + escapeHTML(d.size) + '</div>' : '';
+  var head = '<div class="cn-head">' + nameEl + sizeEl + '</div>';
+  var price = '<div class="cn-priceblk"><div class="cn-pw"><div class="cn-num" style="font-size:' + mm2(size) + '">' + escapeHTML(d.price) + '</div><div class="cn-baht">' + escapeHTML(s.unit) + '</div></div></div>';
+  var pack = d.packPrice
+    ? '<div class="cn-pack"><div class="cn-pack-l">' + escapeHTML(d.packLabel) + '</div><div class="cn-pack-r"><span class="cn-pack-p">' + escapeHTML(d.packPrice) + '</span><span class="cn-pack-b">' + escapeHTML(s.unit) + '</span></div></div>'
+    : '';
+  var foot = '<div class="cn-foot"><span>' + escapeHTML(d.branch) + '</span><span class="cn-foot-bc">' + escapeHTML(d.barcode) + '</span></div>';
+
+  if (d.style === 'strip') {
+    var chars = Array.from(s.shopCn).map(function (ch) { return '<span>' + escapeHTML(ch) + '</span>'; }).join('');
+    return wrap +
+      '<div class="cn-side"><div class="cn-plate">' + chars + '</div><div class="cn-shopv">' + escapeHTML(s.shopTh) + '</div><div class="cn-grow"></div><div class="cn-dash"></div><div class="cn-cornerv">' + escapeHTML(s.corner) + '</div></div>' +
+      '<div class="cn-main">' + head + price + pack + foot + '</div></div>';
+  }
+  var header = '<div class="cn-ph"><div class="cn-ph-plate"><div class="cn-ph-plate-in">' + escapeHTML(s.shopCn) + '</div></div><div class="cn-ph-shop">' + escapeHTML(s.shopTh) + '</div><div class="cn-ph-corner">' + escapeHTML(s.corner) + '</div></div>';
+  if (d.orient === 'portrait') return wrap + header + head + price + pack + foot + '</div>';
+  var pack2 = d.packPrice
+    ? '<div class="cn-pack cn-pack2"><div class="cn-pack-l">' + escapeHTML(d.packLabel) + '</div><div class="cn-pack-r"><span class="cn-pack-p">' + escapeHTML(d.packPrice) + '</span><span class="cn-pack-b">' + escapeHTML(s.unit) + '</span></div></div>'
+    : '';
+  return wrap + header + '<div class="cn-pbody"><div class="cn-pl-left"><div class="cn-pl-info">' + nameEl + sizeEl + '</div><div class="cn-grow"></div>' + pack2 + foot + '</div>' +
+    '<div class="cn-pl-right"><div class="cn-pw"><div class="cn-num" style="font-size:' + mm2(size) + '">' + escapeHTML(d.price) + '</div><div class="cn-baht">' + escapeHTML(s.unit) + '</div></div></div></div></div>';
+}
+
+function loadCnFonts(s) {
+  if (!document.fonts || !document.fonts.load) return Promise.resolve();
+  var jobs = [400, 600, 800].map(function (w) { return document.fonts.load(w + ' 16px "Kanit"', 'ก'); });
+  jobs.push(document.fonts.load('900 16px "Noto Serif SC"', s.shopCn));
+  jobs.push(document.fonts.load('400 16px ' + CN_PRICE_FAMILY, 'ก0'));
+  return Promise.race([
+    Promise.all(jobs).catch(function () {}),
+    new Promise(function (res) { setTimeout(res, 4000); }),
+  ]);
+}
+
+function renderCnSign(cn) {
+  var s = normalizeCnSettings(cn.settings);
+  var orient = cn.orient === 'landscape' ? 'landscape' : 'portrait';
+  var items = (Array.isArray(cn.items) ? cn.items : []).map(normalizeCnItem).map(function (d) { d.orient = orient; return d; });
+  return loadCnFonts(s).then(function () {
+    var html = '';
+    var count = 0;
+    items.forEach(function (d) {
+      for (var k = 0; k < d.qty; k++) {
+        html += '<div class="cn-sheet cn-sheet-' + (orient === 'portrait' ? 'p' : 'l') + '">' + cnSignHTML(d, s) + '</div>';
+        count++;
+      }
+    });
+    document.getElementById('cn-sheets').innerHTML = html;
+    document.body.classList.remove('mode-flip');
+    document.body.classList.add('mode-cn');
+    return { count: count, orient: orient };
+  });
+}
+
+/* พิมพ์ป้ายจีน: @page A4 ตามแนวกระดาษ ขอบ 5 มม. ติดชั่วคราวแล้วคืนค่า */
+function printCnSheets(orient) {
+  var style = document.createElement('style');
+  style.id = 'cn-page-style';
+  style.textContent = '@page { size: A4 ' + orient + '; margin: 5mm; }';
+  document.head.appendChild(style);
+  return new Promise(function (resolve) {
+    var finish = function () {
+      window.removeEventListener('afterprint', finish);
+      var el = document.getElementById('cn-page-style');
+      if (el) el.remove();
+      resolve();
+    };
+    window.addEventListener('afterprint', finish);
+    window.print();
+    setTimeout(finish, 1500);
   });
 }
 
@@ -1805,6 +2047,7 @@ function finalizePrint(items, config) {
   }
   hideWarning();
   document.body.classList.remove('mode-flip');
+  document.body.classList.remove('mode-cn');
 
   var tagCount = renderAll(items, config);
   /* บอกว่างานนี้ถูกส่งมาแบบไหน — ถ้าติ๊กขาว-ดำแล้วยังขึ้น "สี" แปลว่าเครื่องที่กดส่งยังไม่ได้ติ๊ก */
@@ -1831,6 +2074,14 @@ function handlePayload(raw) {
 }
 
 function processMessage(data) {
+  if (data.cnsign) {
+    hideWarning();
+    return renderCnSign(data.cnsign).then(function (r) {
+      document.getElementById('tbLastPrint').textContent = fmtTime(new Date()) + ' · ป้ายจีน A4 ' + r.count + ' แผ่น (' + (r.orient === 'portrait' ? 'แนวตั้ง' : 'แนวนอน') + ')';
+      beep();
+      return printCnSheets(r.orient);
+    });
+  }
   if (data.flip) {
     hideWarning();
     return renderFlip(data.flip).then(function (count) {

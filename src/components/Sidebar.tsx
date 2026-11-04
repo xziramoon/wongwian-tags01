@@ -6,6 +6,7 @@ import SettingsFold from './SettingsFold';
 import BackupFold from './BackupFold';
 import HistoryFold from './HistoryFold';
 import FlipFold from '../flip/FlipFold';
+import CnSignFold from '../cnsign/CnSignFold';
 import PrintFooter from './PrintFooter';
 import ScrollTopFab from './ScrollTopFab';
 
@@ -21,6 +22,7 @@ export default function Sidebar() {
           <QueuePanel />
           <SettingsFold />
           <FlipFold />
+          <CnSignFold />
           <BackupFold />
           <HistoryFold />
         </div>

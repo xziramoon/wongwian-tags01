@@ -4,6 +4,7 @@ import { useUIStore } from '../store/uiStore';
 import PriceTag from './PriceTag';
 import FlipPreview from '../flip/FlipPreview';
 import FlipSheets from '../flip/FlipSheets';
+import { CnPreview, CnSheets } from '../cnsign/CnSignViews';
 import ScrollTopFab from './ScrollTopFab';
 import { chunkSheets, fridgeSheetLayout, printRank } from '../lib/fridge';
 import { hamperSheetLayout } from '../lib/hamper';
@@ -17,7 +18,7 @@ export default function Workspace() {
 
   const tags: { key: string; queueIndex: number }[] = [];
   queue.forEach((item, index) => {
-    if (item.TagMode === 'flip') return; // ป้ายดำแดงวาด/พิมพ์แยก (src/flip)
+    if (item.TagMode === 'flip' || item.TagMode === 'cnsign') return; // ป้ายดำแดง / ป้ายจีน A4 วาด/พิมพ์แยก (src/flip, src/cnsign)
     for (let k = 0; k < item.PrintQty; k++) {
       tags.push({ key: `${index}-${k}`, queueIndex: index });
     }
@@ -38,7 +39,7 @@ export default function Workspace() {
     />
   );
 
-  const hasFlip = queue.some((i) => i.TagMode === 'flip');
+  const hasFlip = queue.some((i) => i.TagMode === 'flip' || i.TagMode === 'cnsign');
 
   return (
     <>
@@ -67,8 +68,10 @@ export default function Workspace() {
         </div>
           )}
           <FlipPreview />
+          <CnPreview />
         </div>
         <FlipSheets />
+        <CnSheets />
       </main>
       <ScrollTopFab targetRef={workspaceRef} variant="workspace" />
     </>
