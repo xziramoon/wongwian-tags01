@@ -70,7 +70,7 @@
   body::after, .scan-beam, .sidebar, .fab-top, .ws-fab-top, .modal-overlay { display:none !important; }
   .workspace { display:block; padding:0; overflow:visible; background:#fff !important; }
   .workspace::before, .workspace::after { display:none !important; }
-  #print-area { width:100%; box-shadow:none !important; padding:2mm; gap:2mm; border:none !important; background:#fff !important; }
+  #print-area { width:100%; box-shadow:none !important; padding:3mm; gap:4mm; border:none !important; background:#fff !important; }
   .empty-msg { display:none !important; }
   .price-tag { border: 2px solid #000 !important; background:#fff !important; box-shadow:none !important; transform:none !important; }
   .tag-header, .tag-ribbon, .badge, .tag-baht-inv, .dual-badge, .wholesale-strip { background:#000 !important; color:#fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }

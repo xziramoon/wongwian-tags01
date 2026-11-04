@@ -1423,7 +1423,7 @@ details.fold[open] .fold-arrow {
   box-shadow: 0 1px 0 rgba(23, 23, 37, 0.04), 0 40px 80px rgba(23, 23, 37, 0.18);
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5mm;
+  gap: 4mm;
   align-content: flex-start;
   position: relative;
   border-radius: 6px;

@@ -90,7 +90,7 @@
     box-shadow: 0 1px 0 rgba(23,23,37,.04), 0 40px 80px rgba(23,23,37,.18);
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5mm;
+    gap: 4mm;
     align-content: flex-start;
     position: relative;
     border-radius: 6px;
@@ -176,7 +176,7 @@
   @media print {
     @page { margin:0; size: auto; }
     body { background:#fff !important; color:#000 !important; overflow:visible; }
-    #print-area { width:100%; box-shadow:none !important; padding:2mm; gap:2mm; border:none !important; background:#fff !important; margin:0; min-height:0; }
+    #print-area { width:100%; box-shadow:none !important; padding:3mm; gap:4mm; border:none !important; background:#fff !important; margin:0; min-height:0; }
     .empty-msg { display:none !important; }
     .price-tag { border: 2px solid #000 !important; background:#fff !important; box-shadow:none !important; transform:none !important; }
     .tag-header, .tag-ribbon, .badge, .tag-baht-inv, .dual-badge, .wholesale-strip { background:#000 !important; color:#fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -399,7 +399,7 @@
   .th-body > :first-child { flex:1 1 auto; min-height:16px; overflow:hidden; display:flex; flex-direction:column; flex-wrap:wrap; align-content:flex-start; }
   .th-body > :first-child > * { width:100%; flex:0 0 auto; }
   .th-name { font-weight:700; color:#000; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
-    .th-sizeline { font-size:var(--meta-sz); color:#333; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .th-sizeline { font-size:min(var(--meta-sz), 5.2cqw); color:#333; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
 
   .th-row { flex:0 0 auto; display:flex; justify-content:space-between; align-items:flex-end; gap:4px; min-width:0; }
   .th-badges { display:flex; flex-direction:column; align-items:flex-start; gap:2px; font-size:calc(var(--meta-sz) - 1px); font-weight:700; min-width:0; overflow:hidden; padding-bottom:1px; }
@@ -548,6 +548,7 @@
   .ftn-nm { font-weight: 800; line-height: 1.15; color: #111; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; text-overflow: ellipsis; }
   .ftn-sz { font-size: 2.75mm; color: #333; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ftn-price { flex: 1 1 auto; min-height: 0; border-top: 0.75mm solid #111; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+  .ftn-pack { align-self: stretch; margin-top: 0.6mm; }
   .ftn-unit { font-size: 3.5mm; font-weight: 800; color: #111; line-height: 1.2; }
 
   /* แถบป้ายแคบ: ด้านละ 43 × 21 พับแนวบน-ล่าง (กางออก 43 × 42) · ด้านสินค้าหมดพิมพ์กลับหัว 180° */
@@ -1419,6 +1420,9 @@ function normalizeFlipItem(raw) {
     pack: str('pack'), label: str('label'), corner: str('corner'), footer: str('footer'), lot: str('lot'),
     qty: Math.max(1, parseInt(q.qty, 10) || 1),
     variant: variant, group: g,
+    /* ความกว้างป้ายเต็ม (มม.) 65–120 · ขนาดชื่อ (มม.) 2.5–7, 0 = อัตโนมัติ — ตรงกับ FlipData.tagW / nameSz ของแอปมือถือ */
+    tagW: Math.min(120, Math.max(65, parseFloat(q.tagW) || FLIP.w)),
+    nameSz: parseFloat(q.nameSz) > 0 ? Math.min(7, Math.max(2.5, parseFloat(q.nameSz))) : 0,
   };
 }
 function flipNum(v) {
@@ -1452,8 +1456,8 @@ function flipTextEm(text, family, weight) {
   flipCtx.font = weight + ' 100px ' + family;
   return flipCtx.measureText(text).width / 100;
 }
-function flipFitName(name, family) {
-  var avail = FLIP.w - FLIP.border * 2 - FLIP.slotW - 5;
+function flipFitName(name, family, tagW) {
+  var avail = (tagW || FLIP.w) - FLIP.border * 2 - FLIP.slotW - 5;
   var em = flipTextEm(name, family, 800);
   for (var s = 5; s > 3.5; s -= 0.25) {
     if (Math.ceil((em * s * 1.06) / avail) <= 2) return s;
@@ -1477,11 +1481,11 @@ function flipWrapAttrs(s, cls, extraStyle) {
 }
 function flipTagHTML(d, s) {
   var family = flipFamily(s);
-  return '<div ' + flipWrapAttrs(s, 'ft') + '>' +
+  return '<div ' + flipWrapAttrs(s, 'ft', ';width:' + d.tagW + 'mm') + '>' +
     '<div class="ft-head"><span class="ft-cn">' + escapeHTML(s.shopCn) + '</span><span class="ft-th">' + escapeHTML(s.shopTh) + '</span><span class="ft-corner">' + escapeHTML(d.corner) + '</span></div>' +
     '<div class="ft-body">' +
       '<div class="ft-info">' +
-        '<div class="ft-name" style="font-size:' + mm2(flipFitName(d.name, family)) + '">' + escapeHTML(d.name) + '</div>' +
+        '<div class="ft-name" style="font-size:' + mm2(d.nameSz || flipFitName(d.name, family, d.tagW)) + '">' + escapeHTML(d.name) + '</div>' +
         (d.size ? '<div class="ft-size">' + escapeHTML(d.size) + '</div>' : '') +
         '<div class="ft-spacer"></div>' +
         (d.barcode ? '<svg class="ft-bc" data-code="' + escapeHTML(d.barcode) + '"></svg>' : '') +
@@ -1532,7 +1536,7 @@ function flipLast4(b) { return String(b).trim().slice(-4); }
 function flipTagSize(d) {
   if (d.variant === 'narrow') return { w: 45, h: 40 };
   if (d.variant === 'group' && d.group) return { w: d.group.slots * 45, h: 40 };
-  return { w: 90, h: 40 };
+  return { w: d.tagW || 90, h: 40 };
 }
 function flipStripSize(d) { return d.variant === 'narrow' ? { w: 43, h: 42 } : { w: 80, h: 31 }; }
 
@@ -1578,21 +1582,27 @@ function flipNarrowTagHTML(d, s) {
   var family = flipFamily(s);
   var price = flipNum(d.price);
   var maxW = s.theme === 'ink' ? 38 : 41;
+  /* ป้ายแคบ: ขนาดชื่อที่ตั้งเองย่อ 70% (2.5–4.5 มม.) · มีราคายกลัง = แถบดำใต้ราคา และราคาเลขเล็กลง */
+  var nameSz = d.nameSz ? Math.min(4.5, Math.max(2.5, d.nameSz * 0.7)) : flipFitNarrowName(d.name, family, !!d.size);
+  var priceSz = d.pack ? flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 11.5, 8) : flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10);
+  var packEl = d.pack ? '<div class="fs-pack ftn-pack" style="font-size:' + mm2(flipFitWidth(d.pack, family, 600, 40, 3, 2)) + '">' + escapeHTML(d.pack) + '</div>' : '';
   return '<div ' + flipWrapAttrs(s, 'ft ftn') + '>' +
     '<div class="ft-head ftn-head"><span class="ft-cn">' + escapeHTML(s.shopCn) + '</span><span class="ftn-th">' + escapeHTML(s.shopTh) + '</span></div>' +
-    '<div class="ftn-name"><div class="ftn-nm" style="font-size:' + mm2(flipFitNarrowName(d.name, family, !!d.size)) + '">' + escapeHTML(d.name) + '</div>' +
+    '<div class="ftn-name"><div class="ftn-nm" style="font-size:' + mm2(nameSz) + '">' + escapeHTML(d.name) + '</div>' +
       (d.size ? '<div class="ftn-sz">' + escapeHTML(d.size) + '</div>' : '') + '</div>' +
-    '<div class="ftn-price"><div class="fs-price" style="font-size:' + mm2(flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10)) + '">' + escapeHTML(price) + '</div>' +
-      '<div class="ftn-unit">' + escapeHTML(s.unit) + '</div></div>' +
+    '<div class="ftn-price"><div class="fs-price" style="font-size:' + mm2(priceSz) + '">' + escapeHTML(price) + '</div>' +
+      '<div class="ftn-unit">' + escapeHTML(s.unit) + '</div>' + packEl + '</div>' +
     '</div>';
 }
 function flipNarrowStripHTML(d, s) {
   var family = flipFamily(s);
   var price = flipNum(d.price);
   var maxW = s.theme === 'ink' ? 36 : 39;
+  var priceSz = d.pack ? flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 11.5, 8) : flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10);
+  var packEl = d.pack ? '<div class="fs-pack ftn-pack" style="font-size:' + mm2(flipFitWidth(d.pack, family, 600, 39, 3, 2)) + '">' + escapeHTML(d.pack) + '</div>' : '';
   return '<div ' + flipWrapAttrs(s, 'fsn') + '>' +
-    '<div class="fsn-face fsn-front"><div class="fs-price" style="font-size:' + mm2(flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10)) + '">' + escapeHTML(price) + '</div>' +
-      '<div class="ftn-unit">' + escapeHTML(s.unit) + '</div></div>' +
+    '<div class="fsn-face fsn-front"><div class="fs-price" style="font-size:' + mm2(priceSz) + '">' + escapeHTML(price) + '</div>' +
+      '<div class="ftn-unit">' + escapeHTML(s.unit) + '</div>' + packEl + '</div>' +
     '<div class="fsn-face fsn-back"><div class="fs-out" style="font-size:' + mm2(flipFitWidth(s.outText, family, 800, 39, 6.5, 4)) + '">' + escapeHTML(s.outText) + '</div>' +
       (s.outSub ? '<div class="fs-outsub">' + escapeHTML(s.outSub) + '</div>' : '') + '</div>' +
     '<div class="fsn-fold"></div></div>';
