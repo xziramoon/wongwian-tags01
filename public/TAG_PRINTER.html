@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TAG_PRINTER — เครื่องพิมพ์ป้ายราคาปลายทาง</title>
+<title>TAG_PRINTER v2026-11-04a — เครื่องพิมพ์ป้ายราคาปลายทาง</title>
 <link
   href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Chakra+Petch:wght@400;600;700&family=Kanit:wght@300;400;600;700&family=Mitr:wght@400;500;600&family=Prompt:wght@300;400;600;700&family=Sarabun:wght@300;400;600;700&family=Potta+One&family=Black+Han+Sans&family=Yuji+Boku&family=Yuji+Syuku&family=Yuji+Mai&family=Zen+Kurenaido&family=Reggae+One&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@900&display=swap"
   rel="stylesheet"
@@ -604,7 +604,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-11-01c'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-11-04a'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -1918,6 +1918,7 @@ function checkForUpdate() {
 }
 setInterval(checkForUpdate, 5 * 60 * 1000);
 document.getElementById('tbBuild').textContent = PRINTER_BUILD;
+document.title = 'TAG_PRINTER v' + PRINTER_BUILD + ' — เครื่องพิมพ์ป้ายราคาปลายทาง';
 
 connectAbly();
 </script>
