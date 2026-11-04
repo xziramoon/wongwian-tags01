@@ -3,6 +3,8 @@ import type { Config, QueueItem } from '../types';
 import type { FlipPrintKind } from '../flip/store';
 import type { FlipData } from '../flip/data';
 import type { FlipSettings } from '../flip/config';
+import type { CnOrient, CnSignSettings } from '../cnsign/config';
+import type { CnSignData } from '../cnsign/data';
 import {
   ABLY_API_KEY,
   PRINT_BATCH_MAX_BYTES,
@@ -18,6 +20,13 @@ export interface FlipPayload {
   items: FlipData[];
 }
 
+/* ป้ายจีน A4 ส่งเป็นงานแยก ฟิลด์ cnsign (1 งาน = 1 แนวกระดาษ) — ตัวรับ TAG_PRINTER.html วาดและพิมพ์ A4 เอง */
+export interface CnSignPayload {
+  orient: CnOrient;
+  settings: CnSignSettings;
+  items: CnSignData[];
+}
+
 export interface PrintPayload {
   v: number;
   ts: number;
@@ -27,6 +36,7 @@ export interface PrintPayload {
   config: Config;
   items: QueueItem[];
   flip?: FlipPayload;
+  cnsign?: CnSignPayload;
 }
 
 export type PublishProgress = (sent: number, total: number) => void;
@@ -118,6 +128,21 @@ class PrintBridge {
       config,
       items: [],
       flip,
+    };
+    await client.channels.get(PRINT_TAGS_CHANNEL).publish(PRINT_EVENT_NAME, payload);
+  }
+  async publishCnSign(config: Config, cnsign: CnSignPayload): Promise<void> {
+    const client = this.getClient();
+    await this.waitConnected(client);
+    const payload: PrintPayload = {
+      v: PRINT_PAYLOAD_VERSION,
+      ts: Date.now(),
+      batchId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      batchIndex: 0,
+      batchTotal: 1,
+      config,
+      items: [],
+      cnsign,
     };
     await client.channels.get(PRINT_TAGS_CHANNEL).publish(PRINT_EVENT_NAME, payload);
   }

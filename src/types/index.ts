@@ -1,4 +1,4 @@
-export type TagMode = 'standard' | 'dual' | 'large' | 'oos' | 'fridge' | 'hamper' | 'flip';
+export type TagMode = 'standard' | 'dual' | 'large' | 'oos' | 'fridge' | 'hamper' | 'flip' | 'cnsign';
 export type DualStyle = 'A' | 'B';
 export type OosReason = 'temp' | 'stop'; // temp = หมดชั่วคราว, stop = เลิกจำหน่าย
 
@@ -22,6 +22,9 @@ export interface QueueItem {
   Exp: string;
   Image: string;
   PrintQty: number;
+  /* ป้ายจีน A4 (TagMode 'cnsign') — ว่าง = ใช้ค่าจาก cnSign.settings */
+  CnStyle?: 'strip' | 'plaque';
+  CnOrient?: 'portrait' | 'landscape';
   PriceDiff: string | null;
   Loc: string;
   Veg: string; // '' = อัตโนมัติจากชื่อ, 'Y' = สินค้าเจ, 'N' = ไม่ใช่เจ

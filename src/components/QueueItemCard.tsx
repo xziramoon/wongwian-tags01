@@ -2,6 +2,7 @@ import { useUIStore } from '../store/uiStore';
 import { useQueueStore } from '../store/queueStore';
 import type { QueueItem } from '../types';
 import ItemOverrides from '../flip/ItemOverrides';
+import CnSignOptions from '../cnsign/CnSignOptions';
 import { autoFontSize, fmtPrice } from '../lib/utils';
 import { HAMPER_DEFAULTS } from '../lib/hamper';
 
@@ -110,10 +111,15 @@ export default function QueueItemCard({ item, index }: Props) {
           <div className={`mode-btn${item.TagMode === 'flip' ? ' active' : ''}`} onClick={() => set('TagMode', 'flip')}>
             ดำแดง (แถบพลิก)
           </div>
+          <div className={`mode-btn${item.TagMode === 'cnsign' ? ' active' : ''}`} onClick={() => set('TagMode', 'cnsign')}>
+            ป้ายจีน A4
+          </div>
         </div>
       </div>
 
       {item.TagMode === 'flip' && <ItemOverrides item={item} />}
+
+      {item.TagMode === 'cnsign' && <CnSignOptions item={item} onSet={set} />}
 
       {item.TagMode === 'fridge' && (
         <span className="fold-hint">
