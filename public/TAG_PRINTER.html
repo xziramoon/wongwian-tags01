@@ -550,6 +550,12 @@
   .ftn-price { flex: 1 1 auto; min-height: 0; border-top: 0.75mm solid #111; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
   .ftn-pack { align-self: stretch; margin-top: 0.6mm; }
   .ftn-unit { font-size: 3.5mm; font-weight: 800; color: #111; line-height: 1.2; }
+  /* ป้ายแคบ + แถบยกลัง: พื้นที่ราคาสูงแค่ ~22 มม. (แถบราคา 21 มม.) ต้องใส่ ราคา + "บาท" + แถบยกลัง
+   * เดิมเต็มพอดีจนตัวเลขราคาแตะเส้นใต้ชื่อ → เว้นขอบบน ลดตัวเลข/บาท/แถบยกลังลงเล็กน้อย ให้มีช่องไฟ */
+  .ftn-price { box-sizing: border-box; padding-top: 1mm; }
+  .fsn-front.ftn-has-pack { padding-top: 0.6mm; }
+  .ftn-has-pack .ftn-unit { font-size: 3mm; line-height: 1.1; }
+  .ftn-has-pack .ftn-pack { margin-top: 0.4mm; padding-top: 0.5mm; padding-bottom: 0.5mm; }
 
   /* แถบป้ายแคบ: ด้านละ 43 × 21 พับแนวบน-ล่าง (กางออก 43 × 42) · ด้านสินค้าหมดพิมพ์กลับหัว 180° */
   .fsn { position: relative; width: 43mm; height: 42mm; display: flex; flex-direction: column; background: #fff; box-sizing: border-box; flex-shrink: 0; font-family: var(--ft-font, 'Kanit', sans-serif); color: #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -604,7 +610,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-11-04a'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-11-04b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -1584,13 +1590,13 @@ function flipNarrowTagHTML(d, s) {
   var maxW = s.theme === 'ink' ? 38 : 41;
   /* ป้ายแคบ: ขนาดชื่อที่ตั้งเองย่อ 70% (2.5–4.5 มม.) · มีราคายกลัง = แถบดำใต้ราคา และราคาเลขเล็กลง */
   var nameSz = d.nameSz ? Math.min(4.5, Math.max(2.5, d.nameSz * 0.7)) : flipFitNarrowName(d.name, family, !!d.size);
-  var priceSz = d.pack ? flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 11.5, 8) : flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10);
-  var packEl = d.pack ? '<div class="fs-pack ftn-pack" style="font-size:' + mm2(flipFitWidth(d.pack, family, 600, 40, 3, 2)) + '">' + escapeHTML(d.pack) + '</div>' : '';
+  var priceSz = d.pack ? flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 9.5, 7) : flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10);
+  var packEl = d.pack ? '<div class="fs-pack ftn-pack" style="font-size:' + mm2(flipFitWidth(d.pack, family, 600, 40, 2.8, 2)) + '">' + escapeHTML(d.pack) + '</div>' : '';
   return '<div ' + flipWrapAttrs(s, 'ft ftn') + '>' +
     '<div class="ft-head ftn-head"><span class="ft-cn">' + escapeHTML(s.shopCn) + '</span><span class="ftn-th">' + escapeHTML(s.shopTh) + '</span></div>' +
     '<div class="ftn-name"><div class="ftn-nm" style="font-size:' + mm2(nameSz) + '">' + escapeHTML(d.name) + '</div>' +
       (d.size ? '<div class="ftn-sz">' + escapeHTML(d.size) + '</div>' : '') + '</div>' +
-    '<div class="ftn-price"><div class="fs-price" style="font-size:' + mm2(priceSz) + '">' + escapeHTML(price) + '</div>' +
+    '<div class="ftn-price' + (d.pack ? ' ftn-has-pack' : '') + '"><div class="fs-price" style="font-size:' + mm2(priceSz) + '">' + escapeHTML(price) + '</div>' +
       '<div class="ftn-unit">' + escapeHTML(s.unit) + '</div>' + packEl + '</div>' +
     '</div>';
 }
@@ -1598,10 +1604,10 @@ function flipNarrowStripHTML(d, s) {
   var family = flipFamily(s);
   var price = flipNum(d.price);
   var maxW = s.theme === 'ink' ? 36 : 39;
-  var priceSz = d.pack ? flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 11.5, 8) : flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10);
-  var packEl = d.pack ? '<div class="fs-pack ftn-pack" style="font-size:' + mm2(flipFitWidth(d.pack, family, 600, 39, 3, 2)) + '">' + escapeHTML(d.pack) + '</div>' : '';
+  var priceSz = d.pack ? flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 9.5, 7) : flipFitWidth(price, flipPriceFamily(s), flipPriceWeight(s), maxW, 15, 10);
+  var packEl = d.pack ? '<div class="fs-pack ftn-pack" style="font-size:' + mm2(flipFitWidth(d.pack, family, 600, 39, 2.8, 2)) + '">' + escapeHTML(d.pack) + '</div>' : '';
   return '<div ' + flipWrapAttrs(s, 'fsn') + '>' +
-    '<div class="fsn-face fsn-front"><div class="fs-price" style="font-size:' + mm2(priceSz) + '">' + escapeHTML(price) + '</div>' +
+    '<div class="fsn-face fsn-front' + (d.pack ? ' ftn-has-pack' : '') + '"><div class="fs-price" style="font-size:' + mm2(priceSz) + '">' + escapeHTML(price) + '</div>' +
       '<div class="ftn-unit">' + escapeHTML(s.unit) + '</div>' + packEl + '</div>' +
     '<div class="fsn-face fsn-back"><div class="fs-out" style="font-size:' + mm2(flipFitWidth(s.outText, family, 800, 39, 6.5, 4)) + '">' + escapeHTML(s.outText) + '</div>' +
       (s.outSub ? '<div class="fs-outsub">' + escapeHTML(s.outSub) + '</div>' : '') + '</div>' +
