@@ -679,6 +679,19 @@
   .cn-pl-left .cn-foot { margin: 0 -8mm; padding: 0 8mm; height: 10.6mm; font-size: 4.5mm; }
   .cn-pl-right { flex: 1 1 0; min-width: 0; container-type: size; border-left: 1.6mm solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 
+  /* ---------- ความเข้มสี (เครื่องพิมพ์สีซีด) — ตั้งจาก "ความเข้มสี" ในเมนู ป้ายจีน A4 ---------- */
+  .cn { --cn-line: 0.5mm; }
+  .cn-num, .cn-pack-p { -webkit-text-stroke: var(--cn-stroke, 0mm) var(--cn-red); paint-order: stroke fill; }
+  .cn-ink-rich { --cn-line: 0.8mm; }
+  .cn-ink-max { --cn-line: 1.1mm; }
+  .cn-ink-rich .cn-size, .cn-ink-rich .cn-pack-l { color: #1a1a1a; }
+  .cn-ink-rich .cn-foot { color: #2b2b2b; }
+  .cn-ink-max .cn-size, .cn-ink-max .cn-pack-l { color: #000; }
+  .cn-ink-max .cn-foot { color: #111; }
+  .cn-ink-rich .cn-cornerv, .cn-ink-rich .cn-ph-corner, .cn-ink-max .cn-cornerv, .cn-ink-max .cn-ph-corner { color: #fff; }
+  .cn-ink-max .cn-baht, .cn-ink-max .cn-pack-b { color: #000; }
+  .cn-pack, .cn-foot { border-top-width: var(--cn-line); }
+
   /* ---------- ขาว-ดำ: ไม่มีสีแดงเหลือ ---------- */
   .cn-mono { --cn-red: #111; }
   .cn-mono .cn-plate { background: #fff; color: #111; }
@@ -732,7 +745,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-11-05c'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-11-05d'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -1834,7 +1847,23 @@ function printFlipSheets() {
  * payload: data.cnsign = { orient: 'portrait'|'landscape', settings, items:[CnSignData] }
  * ถ้าแก้ต้นทาง ต้องแก้ที่นี่ด้วย
  * ============================================================ */
-var CN_DEFAULTS = { style: 'strip', orient: 'portrait', shopCn: '黄六盛', shopTh: 'อึ้งลักเส็ง', corner: 'ปลีก-ส่ง', unit: 'บาท', red: '#C0141C', mono: false };
+var CN_DEFAULTS = { style: 'strip', orient: 'portrait', shopCn: '黄六盛', shopTh: 'อึ้งลักเส็ง', corner: 'ปลีก-ส่ง', unit: 'บาท', red: '#C0141C', mono: false, ink: 'rich' };
+/* ความเข้มสี (ตรงกับ src/cnsign/config.ts): l = คูณความสว่างแดง · s = คูณความอิ่มสี · stroke = ขอบหนาเพิ่มให้ตัวเลขแดง (มม.) */
+var CN_INK_PARAMS = { normal: { l: 1, s: 1, stroke: 0 }, rich: { l: 0.88, s: 1.08, stroke: 0.35 }, max: { l: 0.76, s: 1.15, stroke: 0.7 } };
+function cnBoostRed(hex, ink) {
+  var m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex).trim());
+  var p = CN_INK_PARAMS[ink];
+  if (!m || !p || ink === 'normal') return hex;
+  var h6 = m[1].length === 3 ? m[1].replace(/./g, function (c) { return c + c; }) : m[1];
+  var r = parseInt(h6.slice(0, 2), 16) / 255, g = parseInt(h6.slice(2, 4), 16) / 255, b = parseInt(h6.slice(4, 6), 16) / 255;
+  var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  var s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1)), h = 0;
+  if (d !== 0) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+  var l2 = Math.min(1, l * p.l), s2 = Math.min(1, s * p.s);
+  var c = (1 - Math.abs(2 * l2 - 1)) * s2, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), mm0 = l2 - c / 2;
+  var rgb = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  return '#' + rgb.map(function (v) { var n = Math.round(Math.min(255, Math.max(0, (v + mm0) * 255))); return (n < 16 ? '0' : '') + n.toString(16); }).join('').toUpperCase();
+}
 var CN_NAME_STEPS = {
   sp: [[12, 21], [20, 18], [30, 15.3], [Infinity, 12.7]],
   sl: [[16, 20], [24, 17], [34, 14.3], [Infinity, 12.2]],
@@ -1852,6 +1881,7 @@ function normalizeCnSettings(raw) {
   var m = Object.assign({}, CN_DEFAULTS, raw || {});
   ['shopCn', 'shopTh', 'corner', 'unit'].forEach(function (k) { m[k] = String(m[k] != null ? m[k] : CN_DEFAULTS[k]); });
   m.mono = m.mono === true;
+  if (m.ink !== 'normal' && m.ink !== 'rich' && m.ink !== 'max') m.ink = CN_DEFAULTS.ink;
   if (!/^#[0-9a-f]{3,8}$/i.test(String(m.red))) m.red = CN_DEFAULTS.red;
   return m;
 }
@@ -1902,8 +1932,8 @@ function cnPriceFit(v, m, unitEm) {
 function cnSignHTML(d, s) {
   var v = cnVariant(d);
   var numStyle = cnPriceFit(v, cnMeasureInk(d.price, CN_PRICE_FAMILY, 400), cnMeasureInk(s.unit, "'Kanit',sans-serif", 800).adv);
-  var red = s.mono ? '#111111' : s.red;
-  var wrap = '<div class="cn cn-' + v + ' ' + (d.orient === 'portrait' ? 'cn-p' : 'cn-l') + (s.mono ? ' cn-mono' : '') + '" style="--cn-red:' + escapeHTML(red) + '">';
+  var red = s.mono ? '#111111' : cnBoostRed(s.red, s.ink);
+  var wrap = '<div class="cn cn-' + v + ' ' + (d.orient === 'portrait' ? 'cn-p' : 'cn-l') + (s.mono ? ' cn-mono' : ' cn-ink-' + s.ink) + '" style="--cn-red:' + escapeHTML(red) + ';--cn-stroke:' + CN_INK_PARAMS[s.ink].stroke + 'mm">';
   var nameEl = '<div class="cn-name" style="font-size:' + mm2(cnNameSize(v, d.name)) + '">' + escapeHTML(d.name) + '</div>';
   var sizeEl = d.size ? '<div class="cn-size">' + escapeHTML(d.size) + '</div>' : '';
   var head = '<div class="cn-head">' + nameEl + sizeEl + '</div>';
