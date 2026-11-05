@@ -4,7 +4,8 @@ import { useHistoryStore } from '../store/historyStore';
 import { printBridge } from '../lib/printBridge';
 import type { QueueItem } from '../types';
 import type { CnOrient } from './config';
-import { cnPageCount, splitByOrient, type CnSignData } from './data';
+import { CN_COLOR_TESTS, type CnSignSettings } from './config';
+import { cnPageCount, colorTestSample, splitByOrient, type CnSignData } from './data';
 import { getCnSettings, useCnStore } from './store';
 
 const PAGE_STYLE_ID = 'cnsign-page-style';
@@ -12,9 +13,9 @@ const raf = () => new Promise<void>((r) => requestAnimationFrame(() => requestAn
 const ORIENTS: CnOrient[] = ['portrait', 'landscape'];
 
 /* พิมพ์ทีละแนวกระดาษ (@page ใช้ได้ทีละแนว): ใส่ @page ชั่วคราว → window.print() → คืนค่าใน afterprint — ยึดโครง flip/print.ts */
-function printOrient(orient: CnOrient, items: CnSignData[]): Promise<void> {
+function printOrient(orient: CnOrient, items: CnSignData[], settings?: CnSignSettings): Promise<void> {
   return new Promise((resolve) => {
-    useCnStore.getState().setJob({ orient, items });
+    useCnStore.getState().setJob({ orient, items, settings });
     raf()
       .then(async () => {
         try {
@@ -75,4 +76,31 @@ export async function sendCnSignRemote(items: CnSignData[], source: QueueItem[])
   }
   useHistoryStore.getState().logPrint('remote', source);
   toast(`ส่งป้ายจีน A4 ${cnPageCount(items)} แผ่นไปเครื่องพิมพ์ปลายทางแล้ว ✓`, 'success');
+}
+
+/* ใบทดสอบสี: ปริ้นป้ายตัวอย่างทุกแบบใน CN_COLOR_TESTS ใบละแบบ (ที่เครื่องนี้) */
+export async function printCnColorTests() {
+  const base = getCnSettings();
+  for (const t of CN_COLOR_TESTS) {
+    await printOrient('portrait', [colorTestSample(t.label)], { ...base, ink: t.ink, red: t.red ?? base.red });
+  }
+}
+
+/* ส่งใบทดสอบสีไปเครื่องพิมพ์ปลายทาง (ตัวรับ TAG_PRINTER) — ใบละแบบ */
+export async function sendCnColorTests() {
+  const toast = useUIStore.getState().showToast;
+  const base = getCnSettings();
+  try {
+    for (const t of CN_COLOR_TESTS) {
+      await printBridge.publishCnSign(useQueueStore.getState().config, {
+        orient: 'portrait',
+        settings: { ...base, ink: t.ink, red: t.red ?? base.red },
+        items: [colorTestSample(t.label)],
+      });
+    }
+  } catch {
+    toast('ส่งพิมพ์ไม่สำเร็จ — เช็คอินเทอร์เน็ต', 'error');
+    return;
+  }
+  toast(`ส่งใบทดสอบสี ${CN_COLOR_TESTS.length} แผ่นไปเครื่องพิมพ์ปลายทางแล้ว ✓`, 'success');
 }
