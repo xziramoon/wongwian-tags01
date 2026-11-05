@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQueueStore } from '../store/queueStore';
 import { CnScaled } from './CnSignViews';
-import { CN_ORIENTS, CN_REDS, CN_STYLES, DEFAULT_CN_SETTINGS, type CnSignSettings } from './config';
+import { CN_INK_LEVELS, CN_ORIENTS, CN_REDS, CN_STYLES, DEFAULT_CN_SETTINGS, type CnSignSettings } from './config';
 import { cnPageCount, queueToCnData, type CnSignData } from './data';
 import { printCnSign, sendCnSignRemote } from './print';
 import { useCnSettings, useCnStore } from './store';
@@ -99,6 +99,17 @@ export default function CnSignFold() {
                 <input className="inp" value={raw[key]} onChange={(e) => update(key, e.target.value)} />
               </div>
             ))}
+            <div className="cfg-full">
+              <span className="cfg-lbl">ความเข้มสี (ปริ้นออกมาซีดให้เพิ่ม)</span>
+              <div className="flip-theme-row">
+                {CN_INK_LEVELS.map((t) => (
+                  <button key={t.value} className="btn btn-preset" aria-pressed={raw.ink === t.value} onClick={() => update('ink', t.value)} title={t.hint}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <span className="fold-hint">แดงเข้มขึ้น ตัวเลขราคาหนาขึ้น ตัวเทา/เส้นบางเข้มขึ้น · ตั้ง "คุณภาพสูง/เพิ่มความเข้มสี" ที่ไดรเวอร์เครื่องพิมพ์ด้วยถ้ายังซีด</span>
+            </div>
             <div className="cfg-full">
               <span className="cfg-lbl">สีแดง</span>
               <div className="flip-red">
