@@ -732,7 +732,7 @@
  * และ src/constants.ts: ABLY_API_KEY / PRINT_TAGS_CHANNEL / PRINT_EVENT_NAME)
  * ใช้ wss พอร์ต 443 เท่านั้น ทนไฟร์วอลล์ Wi-Fi ร้าน/ออฟฟิศทั่วไป
  * ============================================================ */
-var PRINTER_BUILD = '2026-11-05b'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
+var PRINTER_BUILD = '2026-11-05c'; /* ⚠️ เปลี่ยนทุกครั้งที่แก้ไฟล์นี้ — เครื่องพิมพ์ที่เปิดค้างจะรีโหลดเองภายใน 5 นาที */
 var ABLY_API_KEY = '8nH3AQ.PvSlnw:CWEkBBL-RYpuLLgRyfLQIxivigFmhnbd2EzDD3oZvh8';
 var CHANNEL_NAME = 'branch-nuea-print-tags';
 var EVENT_NAME = 'print';
@@ -2097,7 +2097,10 @@ function handlePayload(raw) {
   } catch (e) {
     return;
   }
-  jobChain = jobChain.then(function () { return processMessage(data); }).catch(function () {});
+  /* งานไหนวาด/พิมพ์พัง ต้องบอกบนจอ (เดิมเงียบ — เห็นแค่ว่าไม่ออก) แล้วงานถัดไปในคิวยังเดินต่อได้ */
+  jobChain = jobChain.then(function () { return processMessage(data); }).catch(function (err) {
+    showWarning('รับงานพิมพ์แล้วแต่วาดป้ายไม่สำเร็จ — ' + (err && err.message ? err.message : String(err)));
+  });
 }
 
 function processMessage(data) {
