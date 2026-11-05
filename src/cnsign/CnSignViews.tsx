@@ -53,7 +53,7 @@ export function CnSheets() {
     <div id="cn-sheets">
       {pages.map((d, i) => (
         <div key={i} className={`cn-sheet cn-sheet-${job.orient === 'portrait' ? 'p' : 'l'}`}>
-          <CnSignTag data={d} settings={settings} />
+          <CnSignTag data={d} settings={job.settings ?? settings} />
         </div>
       ))}
     </div>

@@ -24,6 +24,7 @@ function saveSettings(s: CnSignSettings) {
 export interface CnJob {
   orient: CnOrient;
   items: CnSignData[];
+  settings?: CnSignSettings; // ใบทดสอบสี: ตั้งค่าเฉพาะงาน (ว่าง = ตามตั้งค่าปัจจุบัน)
 }
 
 interface CnState {

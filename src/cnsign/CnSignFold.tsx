@@ -3,7 +3,7 @@ import { useQueueStore } from '../store/queueStore';
 import { CnScaled } from './CnSignViews';
 import { CN_INK_LEVELS, CN_ORIENTS, CN_REDS, CN_STYLES, DEFAULT_CN_SETTINGS, type CnSignSettings } from './config';
 import { cnPageCount, queueToCnData, type CnSignData } from './data';
-import { printCnSign, sendCnSignRemote } from './print';
+import { printCnColorTests, printCnSign, sendCnColorTests, sendCnSignRemote } from './print';
 import { useCnSettings, useCnStore } from './store';
 
 const SAMPLE: CnSignData = {
@@ -58,6 +58,14 @@ export default function CnSignFold() {
             </button>
             <button className="btn btn-remote" onClick={() => sendCnSignRemote(data, source)}>
               📡 ส่งไปเครื่องปลายทาง
+            </button>
+          </div>
+          <div className="flip-btn-row flip-btn-row2">
+            <button className="btn btn-preset" onClick={() => printCnColorTests()} title="ปริ้นป้ายตัวอย่างหลายความเข้ม ใบละแบบ ให้เลือกจากกระดาษจริง">
+              ใบทดสอบสี (5 แผ่น)
+            </button>
+            <button className="btn btn-remote" onClick={() => sendCnColorTests()}>
+              📡 ส่งใบทดสอบสี
             </button>
           </div>
           <div className="flip-note">
